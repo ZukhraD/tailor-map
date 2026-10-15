@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif}img{max-width:100%}[hidden]{display:none!important}</style>
 <title>Tailor Map</title>
-<meta name="description" content="Tailor Map — подбор стиля одежды по фигуре: тип телосложения, размеры, крой и готовые образы.">
+<meta name="description" content="Tailor Map — подбор стиля одежды по фигуре: тип телосложения, размеры, крой, готовые образы и личный шопер.">
 <meta property="og:title" content="Tailor Map">
 <meta property="og:description" content="Подбор стиля одежды по замерам фигуры и предпочтениям.">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 80'%3E%3Ccircle cx='24' cy='9' r='6.5' fill='none' stroke='%231D1B26' stroke-width='3'/%3E%3Cpath d='M21 16 Q21 19 12 21 Q11 30 15 35 Q13 41 16 47 Q11 60 14 77 M27 16 Q27 19 36 21 Q37 30 33 35 Q35 41 32 47 Q37 60 34 77' fill='none' stroke='%231D1B26' stroke-width='3' stroke-linecap='round'/%3E%3Cpath d='M9 35 L39 35' stroke='%23B88A0C' stroke-width='4'/%3E%3C/svg%3E">
@@ -181,6 +181,46 @@ textarea{font:inherit;color:var(--ink);background:var(--surface);border:1px soli
 .fb-item{border:1px solid var(--line);border-radius:8px;padding:12px;font-size:14px;display:flex;flex-direction:column;gap:6px;min-width:0}
 .fb-item .scores{font:500 12px var(--f-mono);color:var(--muted)}
 .fb-item p{margin:0;overflow-wrap:anywhere}
+.shop{margin-top:28px;display:flex;flex-direction:column;gap:14px}
+.tabs{display:inline-grid;grid-template-columns:1fr 1fr;border:1px solid var(--line);border-radius:6px;overflow:hidden}
+.tabs button{border:0;background:transparent;color:var(--ink);padding:8px 14px;font-weight:600}
+.tabs button[aria-selected=true]{background:var(--ink);color:var(--bg)}
+.pane{display:flex;flex-direction:column;gap:12px}
+.prod-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px}
+.prod{border:1px solid var(--line);border-radius:8px;padding:12px;display:flex;flex-direction:column;gap:8px;min-width:0}
+.prod-h{display:flex;justify-content:space-between;align-items:center}
+.prod input{width:100%}
+.prod .hint{min-height:1.2em}
+.link{border:0;background:none;padding:0;color:var(--plum);font:inherit;font-size:14px;text-decoration:underline;text-underline-offset:2px;cursor:pointer;align-self:flex-start}
+.thumbs{display:flex;gap:8px;flex-wrap:wrap}
+.thumb{position:relative;width:76px;height:96px;border:1px solid var(--line);border-radius:6px;overflow:hidden;background:var(--bg)}
+.thumb img{width:100%;height:100%;object-fit:cover;display:block}
+.thumb button{position:absolute;top:2px;right:2px;width:22px;height:22px;border-radius:50%;border:0;background:var(--ink);color:var(--bg);line-height:1;padding:0}
+.ai-note{margin:0}
+.btn:disabled{opacity:.5;cursor:wait}
+.shop-out:empty{display:none}
+.res-card{border:1px solid var(--line);border-radius:10px;padding:16px;display:flex;flex-direction:column;gap:12px;background:var(--surface);min-width:0}
+.res-card h3{font-family:var(--f-display);font-weight:400;font-size:26px;line-height:1.1;margin:2px 0 0;text-wrap:balance;overflow-wrap:anywhere}
+.res-card h4{font-size:13px;letter-spacing:.06em;text-transform:uppercase;margin:6px 0 0}
+.res-card .cols{margin-top:0}
+.res-card .cols h3{font-family:var(--f-body);font-size:13px;font-weight:700}
+.res-h{display:flex;justify-content:space-between;align-items:start;gap:10px 16px;flex-wrap:wrap}
+.pill{font-size:13px;font-weight:600;padding:5px 11px;border-radius:999px;background:var(--accent-soft);color:var(--ink);white-space:nowrap}
+.pill.ok{background:color-mix(in srgb,var(--good) 18%,var(--surface));color:var(--good)}
+.pill.mid{background:var(--accent-soft)}
+.pill.no{background:color-mix(in srgb,var(--bad) 16%,var(--surface));color:var(--bad)}
+.pill.na{background:var(--bg);color:var(--muted)}
+.checks{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px}
+.chk h3{font-size:21px}
+.chk .cols{grid-template-columns:minmax(0,1fr);gap:12px}
+.sz-line{margin:0;font-size:14px}
+.srch{display:flex;justify-content:space-between;gap:6px 14px;flex-wrap:wrap;padding:8px 0;border-bottom:1px solid var(--line);font-size:14px}
+.mk{display:flex;gap:12px;flex-wrap:wrap}
+.mk a{color:var(--plum);font-weight:600}
+.ai-body{font-size:15px;max-width:75ch}
+.ai-body h4{font-size:13px;letter-spacing:.06em;text-transform:uppercase;margin:16px 0 6px}
+.ai-body p{margin:6px 0}
+.ai-body ul{margin:4px 0;padding-left:20px;display:flex;flex-direction:column;gap:4px}
 </style>
 </head>
 <body>
@@ -262,6 +302,33 @@ textarea{font:inherit;color:var(--ink);background:var(--surface);border:1px soli
 
     <main class="results" id="results" aria-live="polite"></main>
   </div>
+
+  <section class="panel shop" id="shop">
+    <div class="head-row">
+      <div><div class="eyebrow">Личный шопер</div><h2>Хочу купить</h2></div>
+      <div class="tabs" role="tablist" aria-label="Режим">
+        <button type="button" role="tab" id="tabFind" aria-selected="true">Подобрать</button>
+        <button type="button" role="tab" id="tabCheck" aria-selected="false">Проверить товары</button>
+      </div>
+    </div>
+    <p class="hint">Советы строятся по модели фигуры, размерам и предпочтениям из анкеты.</p>
+    <div id="paneFind" class="pane">
+      <label class="fb-field" for="wantText">Что хотите купить?<textarea id="wantText" rows="2" maxlength="600" placeholder="Например: джинсы на каждый день или сумка для офиса"></textarea></label>
+      <div class="chips" id="wantChips"></div>
+      <div class="fb-actions"><button class="btn" type="button" id="findBtn">Подобрать</button><button class="btn ghost ai" type="button" id="findAi">Спросить ИИ</button></div>
+    </div>
+    <div id="paneCheck" class="pane" hidden>
+      <div id="prodList" class="prod-list"></div>
+      <button type="button" class="link" id="addProd">+ Добавить товар</button>
+      <div class="shots">
+        <label class="fb-field" for="shotIn">Скриншоты карточек для ИИ <span class="hint">до 4 штук</span><input type="file" id="shotIn" accept="image/*" multiple></label>
+        <div id="shotThumbs" class="thumbs"></div>
+      </div>
+      <div class="fb-actions"><button class="btn" type="button" id="checkBtn">Проверить</button><button class="btn ghost ai" type="button" id="checkAi">Спросить ИИ</button></div>
+    </div>
+    <p class="hint ai-note" id="aiNote"></p>
+    <div id="shopOut" class="shop-out" aria-live="polite"></div>
+  </section>
 
   <section class="panel fb" id="feedback">
     <div class="fb-intro">
@@ -1146,8 +1213,338 @@ $("delProfile").onclick=()=>{const n=$("profileSel").value;if(!n){toast("Выб�
 
 // линейка
 (()=>{const t=$("tape");let h="";for(let i=0;i<=60;i++)h+=`<span style="left:${i*50+3}px">${i*5}</span>`;t.innerHTML=h;})();
-/* ---------- отзывы ---------- */
 const cuse=n=>(window.claude&&window.claude.use)?window.claude.use(n):Promise.resolve(null);
+/* ---------- Хочу купить ---------- */
+const ENV_ART=!!(window.claude&&window.claude.use);
+const norm=t=>String(t||"").toLowerCase().replace(/ё/g,"е");
+const NB="(?:^|[^а-яa-z])";
+const KW=[
+ [/джинс/,"jeans"],[/шорт|бермуд/,"shorts"],[/брюк|штан|джогг|карго|палаццо|чинос/,"trousers"],[/юбк/,"skirt"],[/комбинезон/,"jumpsuit"],[/плать|сарафан/,"dress"],
+ [/рубаш|блуз|сорочк/,"shirt"],[new RegExp(NB+"(топ|топы|поло)(?![а-я])|футболк|лонгслив|майк|боди(?![а-я])"),"tee"],[/свитер|джемпер|кардиган|водолаз|трикотаж|пуловер/,"knit"],[/худи|свитшот|толстовк/,"hoodie"],
+ [/пиджак|жакет|блейзер|жилет/,"blazer"],[/пальто|тренч|куртк|пуховик|шуб|дубленк|парк[аиу](?![а-я])|бомбер|косух|ветровк|анорак/,"coat"],
+ [/туфл|лодочк|босонож|мюли|каблук/,"heels"],[/лофер|балетк|сандал|эспадр|оксфорд|дерби|монки|мокасин/,"loafers"],[/кроссов|кед(?![а-я])|кеды/,"sneakers"],[/ботин|сапог|ботил|челси|угги|дезерт/,"boots"],
+ [/сумк|клатч|рюкзак|портфел|тоут|шоппер/,"bag"],[/ремен|ремн|пояс/,"belt"],[/серьг|подвеск|украшен|колье|браслет|цепочк|кольц/,"jewelry"],[/шарф|платок|палантин|снуд/,"scarf"],[/шапк|шляп|кепк|берет|панам|бини/,"hat"]
+];
+const PREF_CAT={jeans:"bottom",trousers:"bottom",shorts:"bottom",skirt:"bottom",dress:"dress",jumpsuit:"dress",shirt:"top",tee:"top",knit:"top",hoodie:"top",blazer:"outer",coat:"outer",heels:"shoes",loafers:"shoes",sneakers:"shoes",boots:"shoes",bag:"acc",belt:"acc",jewelry:"acc",scarf:"acc",hat:"acc"};
+const PN={jeans:"Джинсы",trousers:"Брюки",shorts:"Шорты",skirt:"Юбка",dress:"Платье",jumpsuit:"Комбинезон",shirt:"Рубашка или блуза",tee:"Футболка или топ",knit:"Трикотаж",hoodie:"Худи или свитшот",blazer:"Пиджак или жакет",coat:"Верхняя одежда",heels:"Туфли на каблуке",loafers:"Обувь без каблука",sneakers:"Кроссовки и кеды",boots:"Ботинки и сапоги",bag:"Сумка",belt:"Ремень или пояс",jewelry:"Украшения",scarf:"Шарф или платок",hat:"Головной убор"};
+function detectPref(t){t=norm(t);let best=null,pos=1e9;for(const [re,p] of KW){const m=t.match(re);if(m&&m.index<pos){pos=m.index;best=p;}}return best;}
+function detectOcc(t){t=norm(t);if(/офис|работ|делов|собеседов/.test(t))return "work";if(/вечер|свадьб|праздн|ресторан|вечерин|свидан|театр|корпоратив/.test(t))return "evening";if(/кажд(ый|ого) день|повседн|прогул|отпуск|путешеств|учеб|выходн/.test(t))return "day";return null;}
+function detectSeason(t){t=norm(t);if(/лет|жар|пляж|море/.test(t))return "summer";if(/зим|холод|мороз/.test(t))return "winter";if(/осен|весн|демисез|межсез/.test(t))return "mid";return null;}
+
+const COLOR_RE={"Белый":"бел(ый|ая|ое|ые|ого|ую)|white","Молочный":"молочн|айвори|кремов","Бежевый":"бежев|песочн|beige","Кэмел":"кэмел|карамел|коньячн|camel","Серый":"сер(ый|ая|ое|ые|ого|ую)(?![а-я])|меланж|grey|gray","Графит":"графит|темно-сер|антрацит","Чёрный":"черн|black","Тёмно-синий":"темно-син|син(ий|яя|ее|ие)(?![а-я])|navy|нэви","Голубой":"голуб|светло-син","Оливковый":"олив","Хаки":"хаки","Бордо":"бордо|винн(ый|ого)|марсал","Терракот":"терракот|кирпичн|ржав","Пудровый":"пудр|нюд","Красный":"красн|red(?![a-z])","Изумрудный":"изумруд|бутылочн","Горчичный":"горчичн","Лавандовый":"лаванд|сиренев"};
+function detectColors(t){t=norm(t);return Object.keys(COLOR_RE).filter(n=>new RegExp(COLOR_RE[n]).test(t));}
+
+const TAGS=[
+ ["skinny",/скинни|skinny|super ?slim|облегающ(ие|ий) джинс/],["slim",/(?:^|[^a-z])slim|зауж|tapered|сигарет/],["straight",/прям(ые|ой|ая|ого)(?![а-я])|straight|regular fit|прямого кроя/],
+ ["wide",/широк|wide|палаццо|баллон|barrel|баррел/],["loose",/свободн|relaxed|loose|расслабленн/],["flare",/клеш|bootcut|буткат|flare/],["mom",/(?:^|[^a-z])mom(?![a-z])|джинсы мом|мом-джинс/],
+ ["high",/высок(ой|ая|ую) посадк|высок(ой|ая|ую) тали|high (waist|rise)|завышенн(ой|ая) посадк/],["low",/низк(ой|ая|ую) посадк|low rise|заниженн/],
+ ["oversize",/оверсайз|oversize|объемн(ый|ого|ая|ое) (крой|силуэт)|boxy|мешковат/],["fitted",/приталенн|по фигуре|облегающ|в обтяжку|fitted|bodycon/],["wrap",/запах/],
+ ["vneck",/v-образн|v-вырез|v вырез|в-образн|глубок(им|ий) вырез/],["boat",/лодочк|открыт(ые|ыми) плеч|спущенн(ым|ые|ой) плеч|off.?shoulder/],["turtle",/водолаз|высок(им|ий|ое) горл/],
+ ["crop",/укороч|кроп|crop/],["midi",/миди|midi|до середины икры/],["maxi",/макси|maxi|в пол(?![а-я])/],["mini",/мини(?![а-я])|mini(?![a-z])/],
+ ["pencil",/карандаш/],["aline",/а-силуэт|a-силуэт|трапеци/],["pleat",/плиссе|гофре/],["peplum",/баск/],
+ ["puff",/(объемн|пышн)(ыми|ые|ым) рукав|рукав(а|ами)? фонарик|буф/],["pads",/плечик|подплечник/],["belt",/пояс|ремн|ремень|кулиск/],["empire",/ампир|завышенн(ой|ая) тали/],
+ ["flowy",/струящ|шифон|вискоз|сатин|шелк|креп/],["structured",/плотн|костюмн|твид|структур|габардин|шерст/],["chunky",/крупн(ой|ая|ую) вязк|объемн(ой|ая|ую) вязк|вязк(а|ой) косы|косами/],
+ ["hstripe",/горизонтальн|тельняшк|бретонск/],["vstripe",/вертикальн(ая|ую|ой|ые)? ?полос/],["bigprint",/крупн(ый|ым) (принт|рисун|цвет)|яркий принт|цветочн(ый|ым) принт/],
+ ["double",/двубортн/],["single",/однобортн/],["cargo",/карго|накладн(ые|ыми) карман/],["stretch",/эластан|стрейч|stretch|спандекс/],["ripped",/рван|потерт|дыр/],
+ ["light",/бел(ый|ая|ое|ые)|светл|молочн|бежев|кремов|голуб|пудр|айвори/],["dark",/черн|темн|графит|син(ий|яя|ие)(?![а-я])|navy|изумруд|бордо|шоколад/]
+];
+const TAG_LABEL={skinny:"скинни",slim:"зауженный крой",straight:"прямой крой",wide:"широкий крой",loose:"свободный крой",flare:"клёш / bootcut",mom:"mom-fit",high:"высокая посадка",low:"низкая посадка",oversize:"оверсайз",fitted:"приталенный / облегающий",wrap:"запах",vneck:"V-вырез",boat:"вырез «лодочка» / открытые плечи",turtle:"высокое горло",crop:"укороченная длина",midi:"длина миди",maxi:"длина макси",mini:"мини",pencil:"силуэт «карандаш»",aline:"А-силуэт",pleat:"плиссе",peplum:"баска",puff:"объёмные рукава",pads:"подплечники",belt:"пояс",empire:"силуэт ампир",flowy:"струящаяся ткань",structured:"плотная, держащая форму ткань",chunky:"крупная вязка",hstripe:"горизонтальные полосы",vstripe:"вертикальные полосы",bigprint:"крупный принт",double:"двубортный",single:"однобортный",cargo:"карманы-карго",stretch:"эластичная ткань",ripped:"потёртости и рваные детали",light:"светлый цвет",dark:"тёмный цвет"};
+const CTX_LABEL={top:"верха",bottom:"низа",outer:"верхней одежды",dress:"платья"};
+const tagLabel=k=>{const [b,c]=k.split("@");return TAG_LABEL[b]+(c?` (для ${CTX_LABEL[c]||c})`:"");};
+const SHOPRULES={
+ f:{hourglass:{good:["fitted","wrap","high","belt","pencil","vneck","flare","straight","stretch","midi","peplum"],bad:["oversize","low","double","empire","chunky"]},
+    pear:{good:["flare","aline","straight","high","boat","puff","pads","crop@top","crop@outer","dark@bottom","light@top","midi","structured@outer"],bad:["skinny","cargo","low","peplum","pencil","bigprint@bottom","hstripe@bottom","light@bottom","oversize@bottom"]},
+    invtri:{good:["wide","flare","aline","pleat","vneck","cargo","flowy","maxi","midi","dark@top","light@bottom","bigprint@bottom"],bad:["pads","puff","boat","skinny","pencil","hstripe@top","bigprint@top","crop@outer"]},
+    rect:{good:["belt","peplum","wrap","high","wide","mom","pleat","crop@top","structured","pencil","flare","aline"],bad:["low"]},
+    apple:{good:["vneck","empire","wrap","straight","flare","flowy","midi","vstripe","dark","single"],bad:["fitted","crop","skinny","low","hstripe","bigprint@top","bigprint@dress","double","chunky","belt"]}},
+ m:{trap:{good:["straight","slim","fitted","structured","single"],bad:["oversize","skinny","low"]},
+    invtri:{good:["straight","wide","loose","vneck","cargo@bottom","dark@top","light@bottom"],bad:["skinny","slim@bottom","pads","hstripe@top","fitted@top"]},
+    rect:{good:["structured","slim","pads","crop@outer","hstripe@top","fitted"],bad:["oversize","loose","low"]},
+    tri:{good:["structured","pads","light@top","straight","dark@bottom","hstripe@top"],bad:["skinny","cargo","light@bottom","crop@outer","fitted@top"]},
+    oval:{good:["straight","vneck","dark","single","vstripe","structured"],bad:["fitted","skinny","hstripe","double","crop","low","belt"]}}
+};
+const ACC_TIPS={
+ f:{bag:{hourglass:"Сумки среднего размера с мягкими линиями; ремешок до талии подчёркивает её.",pear:"Сумки с коротким ремешком на уровне груди или в руке. Избегайте сумок, которые лежат на бёдрах.",invtri:"Сумки на длинном ремешке на уровне бёдер, клатчи и объёмные модели переносят внимание вниз.",rect:"Структурные сумки чёткой формы и поясные сумки добавляют силуэту акцент.",apple:"Вертикальные сумки на длинном ремешке ниже талии или тоут в руке. Избегайте маленьких сумок у живота."},
+    belt:{hourglass:"Пояс по линии талии — ваш главный аксессуар.",pear:"Тонкий пояс на талии в тон верху.",invtri:"Пояс на бёдрах или широкий пояс в тон низу.",rect:"Широкий пояс поверх жакета или платья создаёт талию.",apple:"Пояс лучше не акцентировать. Если нужен, то тонкий, в тон одежде, под грудью или на бёдрах."},
+    jewelry:{hourglass:"Украшения средней длины, акцент на декольте.",pear:"Крупные серьги и колье у лица переносят внимание вверх.",invtri:"Длинные подвески и серьги вытягивают вертикаль; браслеты и кольца — акцент на руках.",rect:"Крупные выразительные украшения, многослойные цепочки.",apple:"Длинные подвески и серьги-подвески вытягивают силуэт."},
+    scarf:{hourglass:"Тонкий платок у шеи или шарф, заправленный под пояс.",pear:"Яркий платок или шарф у лица — внимание вверх.",invtri:"Длинный шарф, концы вертикально вниз; избегайте объёмных снудов на плечах.",rect:"Объёмный шарф или платок с узлом добавит фактуры.",apple:"Длинный тонкий шарф, концы вниз, создаёт вертикаль."},
+    hat:{}},
+ m:{bag:{default:"Портфель или тоут чёткой формы; рюкзак — минималистичный, без лишнего объёма.",oval:"Портфель или сумка на длинном ремне ниже пояса; избегайте маленьких сумок на груди."},
+    belt:{default:"Ремень в тон обуви, пряжка лаконичная.",oval:"Ремень в тон брюкам, без крупной пряжки, чтобы не делить корпус."},
+    jewelry:{default:"Часы и минимум украшений; цепочка — под рубашку или на тонкой цепи."},
+    scarf:{default:"Шерстяной шарф в тон пальто или на тон светлее.",tri:"Объёмный шарф у шеи визуально расширяет верх."},
+    hat:{}}
+};
+function shoeTip(s,a){
+  const h={petite:"Обувь с открытым подъёмом, в тон брюкам или колготкам, на устойчивом каблуке или платформе вытягивает ногу. Ремешки на щиколотке и очень массивная обувь укорачивают.",tall:"Можно смело носить плоскую подошву, массивную обувь и высокие сапоги.",mid:"Подойдут и плоская подошва, и средний каблук. Обувь в тон низу вытягивает силуэт."}[a.hcat];
+  const sh={pear:"Сапоги и ботильоны выбирайте с голенищем по ноге, без декора на уровне икры.",apple:"Устойчивый каблук или платформа уравновешивают объём корпуса.",invtri:"Массивная обувь и заметные детали внизу уравновешивают плечи.",oval:"Обувь с закруглённым носом и плотной подошвой, без очень узких моделей.",tri:"Классическая обувь без массивной подошвы."}[a.shape]||"";
+  return [h,sh].filter(Boolean);
+}
+function accTip(pref,s,a){
+  if(pref==="hat") return [a.hcat==="petite"?"Компактный головной убор без широких полей сохранит пропорции.":"Можно носить и широкие поля, и объёмные шапки."];
+  const t=(ACC_TIPS[s.g][pref]||{}); return [t[a.shape]||t.default||""].filter(Boolean);
+}
+function fitRowFor(pref,s,a){
+  const cat=PREF_CAT[pref], rows=FIT[s.g][a.shape];
+  if(s.g==="f"){ if(pref==="skirt"||cat==="dress") return rows[3]; if(cat==="bottom") return rows[0]; if(cat==="top") return rows[1]; if(cat==="outer") return rows[2]; }
+  else{ if(cat==="bottom") return rows[0]; if(cat==="top") return rows[1]; if(cat==="outer") return rows[2]; }
+  return null;
+}
+function sizeFor(pref,sz,brandHint){
+  const cat=PREF_CAT[pref]; if(!cat||cat==="acc") return "";
+  if(cat==="shoes") return "размер обуви по длине стопы — по таблице бренда";
+  if(pref==="jeans"){
+    const js=sz.jeans.filter(j=>!brandHint||norm(j.brand)===brandHint);
+    const t=js.map(j=>j.pick?`${j.brand} ${jl(j.pick)}`:`${j.brand}: больше сетки`).join(" · ");
+    return `${t} · W${sz.W} L${sz.L}`;
+  }
+  const r=cat==="top"?sz.top:cat==="bottom"?sz.bottom:cat==="dress"?sz.dress:sz.outer;
+  return `${sz.intOf(r)} · RU ${r}${S.g==="f"?` · EU ${sz.eu(r)}`:""}`;
+}
+function colorsForRole(cat,a,p){
+  const D=p.neutrals.filter(c=>c.l==="d"),L=p.neutrals.filter(c=>c.l!=="d"),A=p.accents;
+  const sh=a.shape;
+  let list;
+  if(cat==="bottom") list=(sh==="invtri")?[...L,...A]:[...D,...L];
+  else if(cat==="top") list=(sh==="pear"||sh==="tri")?[...A,...L]:(sh==="invtri"||sh==="apple"||sh==="oval")?[...D,...A]:[...A,...L,...D];
+  else if(cat==="dress") list=(sh==="apple")?[...D,...A]:[...A,...D];
+  else if(cat==="outer") list=[...L,...D];
+  else list=[...A,...D,...L];
+  return list.filter((c,i,arr)=>arr.findIndex(x=>x.name===c.name)===i).slice(0,3);
+}
+const MARKETS=[["Kaspi","https://kaspi.kz/shop/search/?text="],["Wildberries","https://www.wildberries.ru/catalog/0/search.aspx?search="],["Ozon","https://ozon.kz/search/?text="],["Lamoda","https://www.lamoda.kz/catalogsearch/result/?q="]];
+const searchRow=q=>`<div class="srch"><span>«${esc(q)}»</span><span class="mk">${MARKETS.map(([n,u])=>`<a href="${u+encodeURIComponent(q)}" target="_blank" rel="noopener">${n}</a>`).join("")}</span></div>`;
+
+function findLocal(){
+  const out=$("shopOut"), text=$("wantText").value.trim();
+  if(!valid(S)){out.innerHTML=`<p class="warn">Сначала заполните замеры в анкете.</p>`;return;}
+  const pref=detectPref(text);
+  if(!pref){out.innerHTML=`<div class="res-card"><p>Не поняла, что именно вы ищете. Уточните вещь, например: «джинсы», «платье на вечер», «сумка для офиса». Или попробуйте «Спросить ИИ» — он понимает запросы свободным текстом.</p></div>`;return;}
+  const a=analyze(S), sz=sizes(S), p=palette(S), occ=detectOcc(text), sea=detectSeason(text);
+  const s2={...S,season:sea||S.season};
+  const disliked=S.prefs[pref]===-1;
+  const cat=PREF_CAT[pref];
+  const cands=ITEMS.filter(it=>it.g===S.g&&it.pref===pref).map(it=>({it,r:itemScore(it,{...s2,prefs:{...S.prefs,[pref]:0}},a.shape,occ)})).filter(x=>x.r).sort((x,y)=>y.r.sc-x.r.sc);
+  const good=cands.filter(x=>x.r.fits).slice(0,5), list=good.length?good:cands.slice(0,5);
+  const row=fitRowFor(pref,S,a);
+  const tips=cat==="shoes"?shoeTip(S,a):cat==="acc"?accTip(pref,S,a):[];
+  const cols=colorsForRole(cat,a,p);
+  const gw=S.g==="f"?"женские":"мужские";
+  const queries=[...new Set(list.slice(0,3).map(x=>`${x.it.name.toLowerCase()} ${gw}`))];
+  const szTxt=sizeFor(pref,sz,null);
+  out.innerHTML=`<div class="res-card">
+    <div class="res-h"><div><div class="eyebrow">Под тип «${SHAPES[S.g][a.shape].name}»${occ?` · ${OCC_NAME[occ].toLowerCase()}`:""}${sea?` · ${SEASONS.find(x=>x[0]===sea)[1].toLowerCase()}`:""}</div><h3>${PN[pref]}</h3></div>${szTxt?`<span class="pill">Ваш размер: ${szTxt}</span>`:""}</div>
+    ${disliked?`<p class="warn">В анкете отмечено, что вы это не носите. Подборка всё равно ниже.</p>`:""}
+    ${row?`<div class="cols"><div class="do"><h3>Лучший крой</h3><ul>${row[1].split(/,\s*/).map(x=>`<li>${x}</li>`).join("")}</ul></div><div class="avoid"><h3>Не подойдёт</h3><ul>${row[2].split(/,\s*/).map(x=>`<li>${x}</li>`).join("")}</ul></div></div>`:""}
+    ${tips.length?`<div class="notes">${tips.map(t=>`<div class="note">${t}</div>`).join("")}</div>`:""}
+    <h4>Модели под вас</h4>
+    ${list.length?`<ul class="items">${list.map(x=>`<li><span class="dot" style="background:${cols[0]?cols[0].hex:"var(--line)"}"></span><span>${x.it.name}<small>${x.it.fabric}${x.r.fits?` · <span class="fit-ok">по фигуре</span>`:""}</small></span></li>`).join("")}</ul>`:`<p class="hint">В каталоге нет подходящих моделей под эти условия.</p>`}
+    <h4>Цвета</h4><div class="chips">${cols.map(c=>`<span class="chip"><span class="dot" style="background:${c.hex}"></span>${c.name}</span>`).join("")}</div>
+    <h4>Искать на маркетплейсах</h4>${queries.map(searchRow).join("")}
+  </div>`;
+}
+
+function analyzeProduct(text){
+  const t=norm(text), a=analyze(S), sz=sizes(S), rules=SHOPRULES[S.g][a.shape];
+  const pref=detectPref(t), cat=pref?PREF_CAT[pref]:null;
+  const tags=new Set(); for(const [k,re] of TAGS) if(re.test(t)) tags.add(k);
+  const colors=detectColors(t);
+  colors.forEach(n=>{const c=CMAP[n]; if(c) tags.add(c.l==="d"?"dark":"light");});
+  if(tags.has("light")&&tags.has("dark")&&colors.length>1){/* оставляем оба */}
+  if((pref==="skirt"||cat==="dress")&&tags.has("flare")){tags.delete("flare");tags.add("aline");}
+  if(tags.has("skinny")) tags.delete("slim");
+  const ctx=cat==="dress"?"dress":cat;
+  if(ctx) [...tags].forEach(k=>tags.add(k+"@"+ctx));
+  let score=0; const plus=[], minus=[], info=[];
+  for(const k of rules.good) if(tags.has(k)){score+=1;plus.push(`${cap(tagLabel(k))} — работает на вашу фигуру`);}
+  for(const k of rules.bad) if(tags.has(k)){score-=1.5;minus.push(`${cap(tagLabel(k))} — для типа «${SHAPES[S.g][a.shape].name}» лучше избегать`);}
+  if(a.hcat==="petite"&&tags.has("maxi")){score-=.5;minus.push("Длина макси при невысоком росте — только с каблуком или платформой");}
+  if(a.hcat==="tall"&&tags.has("maxi")){score+=.5;plus.push("Длина макси хорошо смотрится при высоком росте");}
+  if(pref&&S.prefs[pref]===-1){score-=2;minus.push(`В анкете отмечено, что вы не носите: ${PN[pref].toLowerCase()}`);}
+  if(pref&&S.prefs[pref]===1){score+=.5;plus.push(`${PN[pref]} — в списке любимого`);}
+  colors.forEach(n=>{if(S.colors[n]===1){score+=.5;plus.push(`Цвет «${n}» — ваш любимый`);} else if(S.colors[n]===-1){score-=1;minus.push(`Цвет «${n}» вы избегаете`);}});
+  if(pref&&!["bag","belt","jewelry","scarf","hat"].includes(pref)&&!ITEMS.some(it=>it.g===S.g&&it.pref===pref)) info.push("Такую категорию в своём каталоге я не веду, оценка только по крою и цвету.");
+  const brand=/zara/.test(t)?"zara":/mango|mng/.test(t)?"mango":null;
+  const size=pref?sizeFor(pref,sz,brand):"";
+  const found=[...tags].filter(k=>!k.includes("@")).map(k=>TAG_LABEL[k]).filter(Boolean);
+  let verdict, cls;
+  if(!pref&&!found.length){verdict="Мало данных";cls="na";}
+  else if(minus.length===0&&score>=1){verdict="Подойдёт";cls="ok";}
+  else if(score>=0){verdict=minus.length?"Подойдёт с оговорками":"Нейтрально";cls="mid";}
+  else{verdict="Лучше не брать";cls="no";}
+  if(!found.length&&pref) info.push("В описании нет деталей кроя. Добавьте посадку, длину, силуэт и цвет — или спросите ИИ со скриншотом.");
+  return {pref,verdict,cls,plus,minus,info,size,found,colors};
+}
+const cap=s=>s.charAt(0).toUpperCase()+s.slice(1);
+function hostOf(u){try{return new URL(u).hostname.replace(/^www\./,"");}catch(e){return "";}}
+
+/* --- список товаров --- */
+let PRODS=[{url:"",text:""}], SHOTS=[];
+function renderProds(){
+  $("prodList").innerHTML=PRODS.map((p,i)=>`<div class="prod" data-i="${i}">
+    <div class="prod-h"><b>Товар ${i+1}</b>${PRODS.length>1?`<button type="button" class="link" data-del="${i}">Убрать</button>`:""}</div>
+    <input type="text" id="pu${i}" placeholder="Ссылка с маркетплейса (Kaspi, Wildberries, Ozon, Lamoda…)" value="${esc(p.url)}">
+    <textarea id="pt${i}" rows="3" maxlength="2000" placeholder="Название и описание с карточки товара: крой, посадка, длина, цвет, состав">${esc(p.text)}</textarea>
+    <span class="hint" id="ps${i}"></span></div>`).join("");
+  PRODS.forEach((p,i)=>{
+    $("pu"+i).addEventListener("input",e=>{p.url=e.target.value;});
+    $("pu"+i).addEventListener("change",()=>peek(i));
+    $("pt"+i).addEventListener("input",e=>{p.text=e.target.value;});
+  });
+  $("prodList").querySelectorAll("[data-del]").forEach(b=>b.onclick=()=>{PRODS.splice(+b.dataset.del,1);renderProds();});
+  $("addProd").hidden=PRODS.length>=5;
+}
+async function peek(i){
+  const p=PRODS[i]; const st=$("ps"+i); if(!st) return;
+  if(!/^https?:\/\//i.test(p.url.trim())) return;
+  if(ENV_ART){st.textContent="Эта версия не открывает ссылки. Вставьте название и описание с карточки или приложите скриншот для ИИ.";return;}
+  if(p.text.trim()) return;
+  st.textContent="Пробую прочитать карточку…";
+  try{
+    const r=await fetch("/api/product?url="+encodeURIComponent(p.url.trim()));
+    const j=await r.json();
+    if(j.ok&&(j.title||j.description)){
+      p.text=[j.title,j.description].filter(Boolean).join("\n"); const ta=$("pt"+i); if(ta) ta.value=p.text;
+      st.textContent="Описание подтянуто с карточки. Проверьте и дополните, если чего-то не хватает.";
+    }else st.textContent="Маркетплейс не отдал описание. Скопируйте название и описание с карточки вручную или приложите скриншот для ИИ.";
+  }catch(e){st.textContent="Не удалось открыть ссылку. Вставьте название и описание вручную.";}
+}
+function checkLocal(){
+  const out=$("shopOut");
+  if(!valid(S)){out.innerHTML=`<p class="warn">Сначала заполните замеры в анкете.</p>`;return;}
+  const list=PRODS.map((p,i)=>({...p,i})).filter(p=>p.text.trim()||p.url.trim());
+  if(!list.length){out.innerHTML=`<p class="warn">Добавьте хотя бы один товар: название и описание с карточки.</p>`;return;}
+  out.innerHTML=`<div class="checks">${list.map(p=>{
+    const name=(p.text.trim().split("\n")[0]||hostOf(p.url)||"Товар").slice(0,90);
+    if(!p.text.trim()) return `<article class="res-card chk"><div class="res-h"><h3>Товар ${p.i+1}</h3><span class="pill na">Нет описания</span></div><p class="hint">По одной ссылке оценить нельзя. Вставьте название и описание с карточки или приложите скриншот и нажмите «Спросить ИИ».</p>${p.url?`<a class="hint" href="${esc(p.url)}" target="_blank" rel="noopener">${esc(hostOf(p.url))}</a>`:""}</article>`;
+    const r=analyzeProduct(p.text);
+    return `<article class="res-card chk">
+      <div class="res-h"><div><div class="eyebrow">Товар ${p.i+1}${r.pref?` · ${PN[r.pref]}`:""}</div><h3>${esc(name)}</h3></div><span class="pill ${r.cls}">${r.verdict}</span></div>
+      ${r.size?`<p class="sz-line">Ваш размер: <b>${r.size}</b></p>`:""}
+      ${r.plus.length||r.minus.length?`<div class="cols">${r.plus.length?`<div class="do"><h3>Плюсы</h3><ul>${r.plus.map(x=>`<li>${x}</li>`).join("")}</ul></div>`:""}${r.minus.length?`<div class="avoid"><h3>Минусы</h3><ul>${r.minus.map(x=>`<li>${x}</li>`).join("")}</ul></div>`:""}</div>`:""}
+      ${r.info.map(x=>`<p class="hint">${x}</p>`).join("")}
+      ${r.found.length?`<p class="hint">Нашла в описании: ${r.found.join(", ")}</p>`:""}
+      ${p.url?`<a class="hint" href="${esc(p.url)}" target="_blank" rel="noopener">Открыть: ${esc(hostOf(p.url))}</a>`:""}
+    </article>`;}).join("")}</div>`;
+}
+
+/* --- ИИ --- */
+function profileForAI(){
+  const a=analyze(S), sz=sizes(S), p=palette(S), sh=SHAPES[S.g][a.shape];
+  const nm=(list,obj,v)=>list.filter(x=>obj[x[0]]===v).map(x=>x[1]);
+  return {
+    gender:S.g==="f"?"женщина":"мужчина",age:S.age,height:S.height,weight:S.weight,
+    measurements:{shoulders:S.shoulders,bust:S.bust,waist:S.waist,hips:S.hips},
+    bodyType:sh.name,bodyGoal:sh.goal,bmi:+a.bmi.toFixed(1),heightClass:HC[a.hcat],
+    sizes:{top:`${sz.intOf(sz.top)} / RU ${sz.top}`,bottom:`${sz.intOf(sz.bottom)} / RU ${sz.bottom}`,dress:`${sz.intOf(sz.dress)} / RU ${sz.dress}`,outer:`${sz.intOf(sz.outer)} / RU ${sz.outer}`,
+      jeans:sz.jeans.map(j=>`${j.brand} ${j.pick?jl(j.pick):"больше сетки"}`).join(", ")+`; W${sz.W} L${sz.L}`},
+    bestCuts:FIT[S.g][a.shape].map(r=>`${r[0]}: лучше — ${r[1]}; не подойдёт — ${r[2]}`),
+    styles:STYLES[S.g].filter(x=>S.styles.includes(x[0])).map(x=>x[1]),
+    occasions:OCCS.filter(o=>S.occ.includes(o[0])).map(o=>o[1]),
+    season:(SEASONS.find(x=>x[0]===S.season)||SEASONS[0])[1],
+    likes:nm(PREFS[S.g],S.prefs,1),doesNotWear:nm(PREFS[S.g],S.prefs,-1),
+    notInWardrobe:(S.missing||[]).map(k=>k.split("|")[1]),
+    likedColors:Object.keys(S.colors).filter(k=>S.colors[k]===1),avoidColors:Object.keys(S.colors).filter(k=>S.colors[k]===-1),
+    palette:{base:p.neutrals.slice(0,6).map(c=>c.name),accents:p.accents.map(c=>c.name)}
+  };
+}
+const AI_SYSTEM=`Ты — персональный стилист сервиса Tailor Map. Тебе дают модель фигуры человека (замеры, тип фигуры, рассчитанные размеры, предпочтения) и его запрос.
+Отвечай по-русски, дружелюбно, конкретно и коротко, без воды.
+Всегда опирайся на тип фигуры, рост, размеры и предпочтения. Не предлагай то, что человек отметил как «не носит» или «нет в гардеробе», избегай нелюбимых цветов.
+Не выдумывай характеристики товара: если по описанию или скриншоту не видно посадку, длину или ткань — прямо скажи, что уточнить.
+Не давай ссылок на конкретные товары — ты не можешь проверить наличие. Вместо этого предлагай поисковые фразы для маркетплейсов.
+Размеры бери из профиля (для джинсов — сетки Zara и Mango) и советуй сверяться с таблицей размеров на карточке.
+Оформление: короткие заголовки ### и списки «- ». Без таблиц.`;
+function aiUserPrompt(pl){
+  const prof=JSON.stringify(pl.profile,null,1).slice(0,5000);
+  if(pl.mode==="check"){
+    const items=(pl.items||[]).map((it,i)=>`Товар ${i+1}${it.url?` (${it.url})`:""}:\n${(it.text||"(описания нет — см. скриншот)").slice(0,1500)}`).join("\n\n");
+    return `ПРОФИЛЬ:\n${prof}\n\nЗАДАЧА: оцени, подойдут ли эти товары человеку. ${pl.imagesCount?`Приложено скриншотов карточек: ${pl.imagesCount}.`:""}\n\n${items||"Товары на скриншотах."}\n\nФормат для каждого товара:\n### Товар N: короткое название — ✅ Подойдёт / ⚠️ Подойдёт с оговорками / ❌ Лучше не брать\n- Почему (2–4 пункта, привязанных к фигуре)\n- Какой размер брать\n- С чем носить\nВ конце одной строкой: какой товар из списка лучший.`;
+  }
+  return `ПРОФИЛЬ:\n${prof}\n\nЗАПРОС ЧЕЛОВЕКА: ${(pl.text||"").slice(0,800)}\n\nФормат ответа:\n### Что искать\n- 3–5 вариантов: крой, длина, посадка, цвет, ткань — и почему подходит именно этой фигуре\n### Размер\n### Чего избегать\n### Поисковые фразы\n- 3–4 фразы для Kaspi, Wildberries, Ozon, Lamoda\n### С чем носить`;
+}
+function mdLite(t){
+  const lines=esc(t).split(/\n/); let html="", inList=false;
+  const inline=s=>s.replace(/\*\*(.+?)\*\*/g,"<b>$1</b>").replace(/(^|[^*])\*(?!\s)(.+?)\*(?!\*)/g,"$1<i>$2</i>");
+  for(let ln of lines){
+    const m=ln.match(/^\s*(?:[-*•]|\d+[.)])\s+(.*)/);
+    if(m){ if(!inList){html+="<ul>";inList=true;} html+=`<li>${inline(m[1])}</li>`; continue; }
+    if(inList){html+="</ul>";inList=false;}
+    const h=ln.match(/^\s*#{1,4}\s*(.*)/);
+    if(h) html+=`<h4>${inline(h[1])}</h4>`; else if(ln.trim()) html+=`<p>${inline(ln)}</p>`;
+  }
+  if(inList) html+="</ul>";
+  return html;
+}
+async function fileToJpeg(file){
+  const url=URL.createObjectURL(file);
+  try{
+    const img=await new Promise((res,rej)=>{const i=new Image();i.onload=()=>res(i);i.onerror=rej;i.src=url;});
+    const k=Math.min(1,1100/Math.max(img.width,img.height)); const c=document.createElement("canvas");
+    c.width=Math.round(img.width*k); c.height=Math.round(img.height*k); c.getContext("2d").drawImage(img,0,0,c.width,c.height);
+    return c.toDataURL("image/jpeg",.82);
+  }finally{URL.revokeObjectURL(url);}
+}
+const dataUrlToBlob=d=>{const [h,b]=d.split(",");const bin=atob(b);const u=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)u[i]=bin.charCodeAt(i);return new Blob([u],{type:h.match(/:(.*?);/)[1]});};
+function renderShots(){
+  $("shotThumbs").innerHTML=SHOTS.map((d,i)=>`<span class="thumb"><img src="${d}" alt="Скриншот ${i+1}"><button type="button" data-shot="${i}" aria-label="Убрать скриншот ${i+1}">×</button></span>`).join("");
+  $("shotThumbs").querySelectorAll("[data-shot]").forEach(b=>b.onclick=()=>{SHOTS.splice(+b.dataset.shot,1);renderShots();});
+}
+let aiBusy=false;
+async function askAI(mode){
+  if(aiBusy) return;
+  const out=$("shopOut");
+  if(!valid(S)){out.innerHTML=`<p class="warn">Сначала заполните замеры в анкете.</p>`;return;}
+  const pl={mode,profile:profileForAI()};
+  if(mode==="find"){pl.text=$("wantText").value.trim(); if(!pl.text){out.innerHTML=`<p class="warn">Напишите, что хотите купить.</p>`;return;}}
+  else{pl.items=PRODS.filter(p=>p.text.trim()||p.url.trim()).map(p=>({url:p.url.trim().slice(0,500),text:p.text.trim().slice(0,1500)})); pl.imagesCount=SHOTS.length;
+    if(!pl.items.length&&!SHOTS.length){out.innerHTML=`<p class="warn">Добавьте описание товара или скриншот карточки.</p>`;return;}}
+  aiBusy=true; document.querySelectorAll(".ai").forEach(b=>b.disabled=true);
+  out.innerHTML=`<div class="res-card ai-card"><div class="eyebrow">Ответ ИИ</div><div class="ai-body"><p class="hint">Думаю над ответом…</p></div></div>`;
+  const body=out.querySelector(".ai-body");
+  try{
+    let text="";
+    if(ENV_ART){
+      const sample=await cuse("sample"); if(!sample) throw {code:"not_granted"};
+      const opts={cache:false,onText:({text})=>{body.innerHTML=mdLite(text);}};
+      if(SHOTS.length&&mode==="check"){try{const lim=await sample.limits();if(lim&&lim.images) opts.images=SHOTS.map(dataUrlToBlob);}catch(e){}}
+      const r=await sample(AI_SYSTEM+"\n\n"+aiUserPrompt(pl),opts); text=r.text;
+    }else{
+      const r=await fetch("/api/ai",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({...pl,images:mode==="check"?SHOTS:[]})});
+      const j=await r.json().catch(()=>({}));
+      if(!r.ok||!j.ok) throw {code:j.error||("http_"+r.status)};
+      text=j.text;
+    }
+    body.innerHTML=mdLite(text)+`<p class="hint">Ответ ИИ — ориентир. Размеры и состав сверяйте на карточке товара.</p>`;
+  }catch(e){
+    const code=(e&&e.code)||"";
+    const msg={not_configured:"ИИ пока не подключён на сайте. Владелец сайта добавит ключ Gemini, и кнопка заработает. А пока пользуйтесь кнопками «Подобрать» и «Проверить».",
+      rate_limited:"Слишком много запросов к ИИ. Подождите минуту и попробуйте снова.",
+      too_large:"Скриншоты слишком большие. Уберите один или два и попробуйте снова.",
+      not_granted:"ИИ недоступен в этом окне. Пользуйтесь кнопками «Подобрать» и «Проверить»."}[code]||"ИИ не ответил. Попробуйте ещё раз через минуту.";
+    body.innerHTML=`<p class="warn">${msg}</p>`;
+  }finally{aiBusy=false;document.querySelectorAll(".ai").forEach(b=>b.disabled=false);}
+}
+
+/* --- инициализация блока --- */
+(function initShop(){
+  const ex=S.g==="f"?["Джинсы на каждый день","Платье на свадьбу летом","Пальто на зиму","Сумка для офиса"]:["Джинсы на каждый день","Пиджак для работы","Пуховик на зиму","Кроссовки"];
+  $("wantChips").innerHTML=ex.map(x=>`<button type="button" class="chip" data-ex="${esc(x)}">${x}</button>`).join("");
+  $("wantChips").querySelectorAll("[data-ex]").forEach(b=>b.onclick=()=>{$("wantText").value=b.dataset.ex;findLocal();});
+  const tab=k=>{const f=k==="find";$("tabFind").setAttribute("aria-selected",f);$("tabCheck").setAttribute("aria-selected",!f);$("paneFind").hidden=!f;$("paneCheck").hidden=f;$("shopOut").innerHTML="";};
+  $("tabFind").onclick=()=>tab("find"); $("tabCheck").onclick=()=>tab("check");
+  $("findBtn").onclick=findLocal; $("findAi").onclick=()=>askAI("find");
+  $("checkBtn").onclick=checkLocal; $("checkAi").onclick=()=>askAI("check");
+  $("addProd").onclick=()=>{PRODS.push({url:"",text:""});renderProds();};
+  $("shotIn").addEventListener("change",async e=>{
+    for(const f of [...e.target.files].slice(0,4-SHOTS.length)){try{SHOTS.push(await fileToJpeg(f));}catch(err){}}
+    e.target.value=""; renderShots();
+  });
+  $("aiNote").textContent=ENV_ART?"«Спросить ИИ» отправляет ваши замеры, запрос и скриншоты в Claude, чтобы составить ответ.":"«Спросить ИИ» отправляет ваши замеры, запрос и скриншоты в Google Gemini, чтобы составить ответ. На бесплатном тарифе Google может использовать эти данные для улучшения сервиса, поэтому не загружайте скриншоты с личной информацией.";
+  renderProds();
+})();
+
+/* ---------- отзывы ---------- */
 const FBQ={r1:"Тип фигуры",r2:"Образы",r3:"Размеры",r4:"Удобство"};
 const fb={r1:0,r2:0,r3:0,r4:0};
 document.querySelectorAll(".fb-q").forEach(q=>{
