@@ -1,0 +1,7 @@
+{
+  "name": "tailor-map",
+  "private": true,
+  "type": "module",
+  "description": "Подбор стиля одежды по фигуре",
+  "engines": { "node": ">=18" }
+}

@@ -1,0 +1,1214 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>Tailor Map</title>
+<meta name="description" content="Tailor Map — подбор стиля одежды по фигуре: тип телосложения, размеры, крой и готовые образы.">
+<meta property="og:title" content="Tailor Map">
+<meta property="og:description" content="Подбор стиля одежды по замерам фигуры и предпочтениям.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 80'%3E%3Ccircle cx='24' cy='9' r='6.5' fill='none' stroke='%231D1B26' stroke-width='3'/%3E%3Cpath d='M21 16 Q21 19 12 21 Q11 30 15 35 Q13 41 16 47 Q11 60 14 77 M27 16 Q27 19 36 21 Q37 30 33 35 Q35 41 32 47 Q37 60 34 77' fill='none' stroke='%231D1B26' stroke-width='3' stroke-linecap='round'/%3E%3Cpath d='M9 35 L39 35' stroke='%23B88A0C' stroke-width='4'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Manrope:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: anketa (left, narrow column) → model figure + strategy + outfits (right). Measuring-tape strip as the one signature detail. */
+:root{
+  --bg:#F1F0F4; --surface:#FFFFFF; --ink:#1D1B26; --muted:#686577; --line:#DAD7E1;
+  --accent:#B88A0C; --accent-soft:#F4E6B5; --plum:#5B3A6B; --plum-soft:#EDE4F1;
+  --good:#2D7451; --bad:#A9433A; --body:#E4DFEA; --body-line:#8E879C;
+  --f-display:"Instrument Serif", "Times New Roman", Georgia, serif;
+  --f-body:"Manrope", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --f-mono:"JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#14131A; --surface:#1D1B25; --ink:#ECEAF2; --muted:#9C98AB; --line:#2F2C3A;
+  --accent:#E2B53A; --accent-soft:#3A311A; --plum:#C2A1D3; --plum-soft:#2B2233;
+  --good:#6CC79A; --bad:#E58A80; --body:#2C2937; --body-line:#7A7489; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#14131A; --surface:#1D1B25; --ink:#ECEAF2; --muted:#9C98AB; --line:#2F2C3A;
+  --accent:#E2B53A; --accent-soft:#3A311A; --plum:#C2A1D3; --plum-soft:#2B2233;
+  --good:#6CC79A; --bad:#E58A80; --body:#2C2937; --body-line:#7A7489; color-scheme:dark}
+
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.5}
+.wrap{max-width:1240px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0 48px}
+.tape{height:34px;background:
+  repeating-linear-gradient(90deg,var(--ink) 0 1px,transparent 1px 100%) 0 0/50px 16px no-repeat repeat-x,
+  repeating-linear-gradient(90deg,var(--ink) 0 1px,transparent 1px 100%) 0 0/10px 8px repeat-x,
+  var(--accent);opacity:.95;position:relative;overflow:hidden}
+.tape span{position:absolute;top:15px;font:500 10px var(--f-mono);color:var(--ink)}
+header.top{display:flex;flex-wrap:wrap;align-items:end;justify-content:space-between;gap:12px 32px;padding-block:28px 22px}
+h1{font-family:var(--f-display);font-weight:400;font-size:clamp(40px,6vw,64px);line-height:1;margin:0;letter-spacing:-.01em}
+h1 em{color:var(--plum)}
+.lede{max-width:52ch;color:var(--muted);margin:0}
+.profiles{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+select,input[type=text],input[type=number]{font:inherit;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:8px 10px;min-width:0}
+input:focus-visible,select:focus-visible,button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+button{font:inherit;cursor:pointer}
+.btn{border:1px solid var(--ink);background:var(--ink);color:var(--bg);padding:8px 14px;border-radius:6px;font-weight:600}
+.btn.ghost{background:transparent;color:var(--ink);border-color:var(--line)}
+
+.grid{display:grid;grid-template-columns:minmax(0,380px) minmax(0,1fr);gap:28px;align-items:start}
+@media (max-width:900px){.grid{grid-template-columns:minmax(0,1fr)}}
+
+.form{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:20px;display:flex;flex-direction:column;gap:22px}
+.form h2,.panel h2{font-family:var(--f-display);font-weight:400;font-size:26px;margin:0;line-height:1.1}
+fieldset{border:0;padding:0;margin:0;display:flex;flex-direction:column;gap:10px;min-width:0}
+legend{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:700;margin-bottom:8px;padding:0}
+.seg{display:grid;grid-template-columns:1fr 1fr;border:1px solid var(--line);border-radius:6px;overflow:hidden}
+.seg button{border:0;background:transparent;color:var(--ink);padding:9px;font-weight:600}
+.seg button[aria-pressed=true]{background:var(--ink);color:var(--bg)}
+.meas{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.meas label{display:flex;flex-direction:column;gap:4px;font-size:13px;color:var(--muted);min-width:0}
+.meas input{font-family:var(--f-mono);font-variant-numeric:tabular-nums;width:100%}
+.unit{font-family:var(--f-mono);font-size:11px}
+.hint{font-size:12px;color:var(--muted);margin:0}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{border:1px solid var(--line);background:transparent;color:var(--ink);padding:6px 11px;border-radius:999px;font-size:13px;display:inline-flex;align-items:center;gap:6px}
+.chip[data-s="1"]{background:var(--plum-soft);border-color:var(--plum);color:var(--ink)}
+.chip[data-s="1"]::before{content:"♥";color:var(--plum);font-size:11px}
+.chip[data-s="-1"]{border-style:dashed;color:var(--muted);text-decoration:line-through}
+.chip.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.dot{width:12px;height:12px;border-radius:50%;border:1px solid var(--line);flex:none}
+.legend-row{display:flex;gap:14px;font-size:12px;color:var(--muted);flex-wrap:wrap}
+
+.results{display:flex;flex-direction:column;gap:22px;min-width:0}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:22px;min-width:0}
+.model{display:grid;grid-template-columns:200px minmax(0,1fr);gap:24px;align-items:center}
+@media (max-width:560px){.model{grid-template-columns:minmax(0,1fr)}.model svg{max-width:200px;margin:0 auto}}
+.model svg{width:100%;height:auto;display:block}
+.eyebrow{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:700}
+.shape-name{font-family:var(--f-display);font-size:clamp(34px,4.5vw,48px);line-height:1;margin:6px 0 10px;text-wrap:balance}
+.goal{margin:0 0 16px;max-width:60ch}
+.metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:1px;background:var(--line);border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.metric{background:var(--surface);padding:10px 12px}
+.metric b{display:block;font:500 20px var(--f-mono);font-variant-numeric:tabular-nums}
+.metric small{color:var(--muted);font-size:12px}
+.tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:14px}
+.tag{font-size:12px;padding:3px 9px;border-radius:4px;background:var(--accent-soft);color:var(--ink)}
+
+.cols{display:grid;grid-template-columns:1fr 1fr;gap:22px;margin-top:14px}
+@media (max-width:640px){.cols{grid-template-columns:1fr}}
+.cols h3{font-size:13px;margin:0 0 8px;letter-spacing:.06em;text-transform:uppercase}
+.cols ul{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:7px}
+.cols li{padding-left:22px;position:relative;font-size:14px}
+.do li::before{content:"✓";position:absolute;left:0;color:var(--good);font-weight:700}
+.avoid li::before{content:"✕";position:absolute;left:0;color:var(--bad);font-weight:700}
+.notes{margin-top:18px;display:flex;flex-direction:column;gap:8px}
+.note{font-size:14px;padding:10px 12px;border-left:3px solid var(--accent);background:var(--bg);border-radius:0 6px 6px 0}
+
+.palette{display:flex;flex-wrap:wrap;gap:12px;margin-top:12px}
+.sw{display:flex;flex-direction:column;gap:4px;align-items:flex-start;font-size:12px;color:var(--muted);width:72px}
+.sw i{display:block;width:72px;height:44px;border-radius:6px;border:1px solid var(--line)}
+.palette-group{margin-top:14px}
+
+.head-row{display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap}
+.occ-filter{display:flex;gap:6px;flex-wrap:wrap}
+.outfits{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:16px;margin-top:16px}
+.outfit{border:1px solid var(--line);border-radius:10px;padding:16px;display:flex;flex-direction:column;gap:12px;background:var(--surface)}
+.outfit .stack{display:flex;height:64px;border-radius:6px;overflow:hidden;border:1px solid var(--line)}
+.outfit .stack i{flex:1}
+.outfit h4{margin:0;font-family:var(--f-display);font-weight:400;font-size:22px;line-height:1.1}
+.outfit .occ{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--plum);font-weight:700}
+.items{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
+.items li{display:grid;grid-template-columns:14px minmax(0,1fr);gap:10px;align-items:start;font-size:14px}
+.items li .dot{margin-top:4px}
+.items small{display:block;color:var(--muted);font-size:12px}
+.empty{color:var(--muted);padding:20px;text-align:center;border:1px dashed var(--line);border-radius:8px}
+.warn{padding:12px;border-radius:8px;background:var(--accent-soft);font-size:14px}
+.toast{position:fixed;bottom:calc(16px + env(safe-area-inset-bottom,0px));left:50%;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:8px;font-size:14px}
+@media (prefers-reduced-motion:no-preference){.outfit{transition:transform .15s}.outfit:hover{transform:translateY(-2px)}}
+.brand{display:flex;align-items:center;gap:14px}
+.logo{height:clamp(52px,7.5vw,74px);width:auto;color:var(--ink);flex:none}
+.sizes{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:20px;margin-top:14px;align-items:start}
+@media (max-width:700px){.sizes{grid-template-columns:minmax(0,1fr)}}
+.tbl-wrap{overflow-x:auto}
+table.sz{border-collapse:collapse;width:100%;font-size:14px}
+.sz th,.sz td{padding:8px 10px;border-bottom:1px solid var(--line);text-align:left}
+.sz thead th{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.sz td{font-family:var(--f-mono);font-variant-numeric:tabular-nums;font-weight:500}
+.sz tbody th{font-weight:500}
+h3.sub{font-size:13px;letter-spacing:.06em;text-transform:uppercase;margin:22px 0 10px}
+.fit{display:grid;grid-template-columns:minmax(0,.8fr) minmax(0,1.3fr) minmax(0,1.1fr);border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.fit>div{padding:9px 12px;border-bottom:1px solid var(--line);font-size:14px;min-width:0}
+.fit-h{font-size:11px!important;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);background:var(--bg);font-weight:700}
+.fit-c{font-weight:600}
+.fit-b{border-left:3px solid var(--good)}
+.fit-x{border-left:3px solid var(--bad);color:var(--muted)}
+@media (max-width:640px){.fit{grid-template-columns:minmax(0,1fr)}.fit-h{display:none}.fit-c{background:var(--bg)}}
+.o-head{display:flex;justify-content:space-between;align-items:start;gap:10px}
+.try{border:1px solid var(--line);background:transparent;color:var(--ink);border-radius:6px;padding:4px 9px;font-size:12px;font-weight:600;flex:none}
+.try:hover{border-color:var(--ink)}
+.dotbtn{padding:0;cursor:pointer;width:14px;height:14px}
+.dotbtn:hover{outline:2px solid var(--accent);outline-offset:1px}
+.size{font:500 11px var(--f-mono);background:var(--accent-soft);padding:1px 6px;border-radius:4px;white-space:nowrap}
+.acts{display:flex;gap:10px;margin-top:3px;flex-wrap:wrap}
+.acts button,.reset{border:0;background:none;padding:0;color:var(--plum);font-size:12px;text-decoration:underline;text-underline-offset:2px;cursor:pointer}
+.reset{align-self:flex-start}
+.fit-ok{color:var(--good);font-weight:600}
+.pop{position:fixed;z-index:30;width:250px;max-height:calc(100vh - 24px);overflow:auto;background:var(--surface);border:1px solid var(--line);border-radius:12px;box-shadow:0 18px 44px rgba(18,16,28,.22);padding:12px;pointer-events:none;display:flex;flex-direction:column;gap:8px}
+.pop.pinned{pointer-events:auto}
+.pop svg{width:100%;height:auto;display:block;background:var(--bg);border-radius:8px;max-height:52vh}
+.pop-h{display:flex;justify-content:space-between;align-items:center}
+.pop-h .occ{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--plum);font-weight:700}
+.pop-x{border:0;background:none;color:var(--ink);font-size:22px;line-height:1;padding:0 4px;cursor:pointer}
+.pop-t{font-family:var(--f-display);font-size:20px;line-height:1.1}
+.pop-l{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--muted)}
+.pop-l i{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:6px;border:1px solid var(--line)}
+.cnt{font:500 11px var(--f-mono);opacity:.7}
+.more-row{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-top:18px}
+.fb{margin-top:28px;display:grid;grid-template-columns:minmax(0,320px) minmax(0,1fr);gap:28px;align-items:start}
+@media (max-width:900px){.fb{grid-template-columns:minmax(0,1fr)}}
+.fb-owner{grid-column:1/-1;border-top:1px solid var(--line);padding-top:18px}
+.fb-intro h2{margin:6px 0 8px}
+.fb-form{display:flex;flex-direction:column;gap:14px;min-width:0}
+.fb-field{display:flex;flex-direction:column;gap:6px;font-size:14px;font-weight:600}
+.fb-field .hint{font-weight:400;display:inline}
+textarea{font:inherit;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:8px 10px;width:100%;resize:vertical}
+.fb-q{display:flex;justify-content:space-between;align-items:center;gap:10px 16px;flex-wrap:wrap;font-size:14px}
+.scale{display:flex;gap:4px}
+.scale button{width:34px;height:34px;border:1px solid var(--line);background:transparent;color:var(--ink);border-radius:6px;font:500 13px var(--f-mono)}
+.scale button[aria-pressed=true]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.fb-check{display:flex;gap:8px;align-items:center;font-size:14px}
+.fb-actions{display:flex;gap:14px;align-items:center;flex-wrap:wrap}
+.fb-fallback{display:flex;flex-direction:column;gap:10px;padding:14px;border-radius:8px;background:var(--accent-soft);font-size:14px}
+.fb-fallback p{margin:0}
+.fb-fallback .btn{align-self:flex-start}
+[hidden]{display:none!important}
+.fb-fallback textarea{font-family:var(--f-mono);font-size:12px}
+.fb-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px;margin-top:12px}
+.fb-item{border:1px solid var(--line);border-radius:8px;padding:12px;font-size:14px;display:flex;flex-direction:column;gap:6px;min-width:0}
+.fb-item .scores{font:500 12px var(--f-mono);color:var(--muted)}
+.fb-item p{margin:0;overflow-wrap:anywhere}
+</style>
+</head>
+<body>
+
+<div class="tape" aria-hidden="true" id="tape"></div>
+<div class="wrap">
+  <header class="top">
+    <div>
+      <div class="brand"><svg class="logo" viewBox="0 0 48 80" aria-hidden="true">
+        <circle cx="24" cy="9" r="6.5" fill="none" stroke="currentColor" stroke-width="2"/>
+        <path d="M21 16 Q21 19 12 21 Q11 30 15 35 Q13 41 16 47 Q11 60 14 77 M27 16 Q27 19 36 21 Q37 30 33 35 Q35 41 32 47 Q37 60 34 77 M24 52 L23 77 M12 21 Q6 34 8 50 M36 21 Q42 34 40 50" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M9 35 L39 35" stroke="var(--accent)" stroke-width="3" stroke-dasharray="3 2"/>
+      </svg><h1>Tailor <em>Map</em></h1></div>
+      <p class="lede">Введите замеры и вкусы человека. Система определит тип телосложения и соберёт образы, которые работают на фигуру и не нарушают его предпочтений. В каталоге <b id="catCount"></b> вещей с учётом сезона и ткани.</p>
+    </div>
+    <div class="profiles">
+      <select id="profileSel" aria-label="Сохранённые профили"><option value="">Профили…</option></select>
+      <button class="btn ghost" id="delProfile" type="button">Удалить</button>
+    </div>
+  </header>
+
+  <div class="grid">
+    <form class="form" id="form" autocomplete="off">
+      <h2>Анкета</h2>
+      <fieldset>
+        <legend>Человек</legend>
+        <div class="meas" style="grid-template-columns:1fr">
+          <label for="name">Имя профиля<input type="text" id="name" placeholder="например, Айгерим"></label>
+        </div>
+        <div class="seg" role="group" aria-label="Пол">
+          <button type="button" id="gF" data-g="f">Женщина</button>
+          <button type="button" id="gM" data-g="m">Мужчина</button>
+        </div>
+        <div class="meas">
+          <label for="age">Возраст <span class="unit">лет</span><input type="number" id="age" min="14" max="99"></label>
+          <label for="height">Рост <span class="unit">см</span><input type="number" id="height" min="130" max="215"></label>
+          <label for="weight">Вес <span class="unit">кг</span><input type="number" id="weight" min="35" max="220"></label>
+          <label for="shoulders">Ширина плеч <span class="unit">см</span><input type="number" id="shoulders" min="28" max="65"></label>
+        </div>
+      </fieldset>
+      <fieldset>
+        <legend>Обхваты</legend>
+        <div class="meas">
+          <label for="bust"><span id="bustLbl">Грудь</span> <span class="unit">см</span><input type="number" id="bust" min="60" max="180"></label>
+          <label for="waist">Талия <span class="unit">см</span><input type="number" id="waist" min="45" max="180"></label>
+          <label for="hips">Бёдра <span class="unit">см</span><input type="number" id="hips" min="60" max="190"></label>
+        </div>
+        <p class="hint">Плечи — по спине от одной плечевой точки до другой. Талия — в самом узком месте, бёдра — по самым выступающим точкам ягодиц.</p>
+      </fieldset>
+      <fieldset>
+        <legend>Любимые стили</legend>
+        <div class="chips" id="styles"></div>
+      </fieldset>
+      <fieldset>
+        <legend>Для каких случаев</legend>
+        <div class="chips" id="occs"></div>
+      </fieldset>
+      <fieldset>
+        <legend>Сезон</legend>
+        <div class="chips" id="seasons"></div>
+      </fieldset>
+      <fieldset>
+        <legend>Одежда: что любит и что не носит</legend>
+        <div class="chips" id="prefs"></div>
+        <div class="legend-row"><span>1 нажатие — ♥ любит</span><span>2 — не носит</span><span>3 — сброс</span></div>
+      </fieldset>
+      <fieldset id="missWrap" hidden>
+        <legend>Нет в гардеробе</legend>
+        <div class="chips" id="missing"></div>
+        <p class="hint">Эти вещи исключены из подбора. Нажмите, чтобы вернуть.</p>
+      </fieldset>
+      <fieldset>
+        <legend>Цвета</legend>
+        <div class="chips" id="colors"></div>
+        <div class="legend-row"><span>1 — ♥ любимый</span><span>2 — избегает</span></div>
+      </fieldset>
+      <button class="btn" type="submit">Сохранить профиль</button>
+    </form>
+
+    <main class="results" id="results" aria-live="polite"></main>
+  </div>
+
+  <section class="panel fb" id="feedback">
+    <div class="fb-intro">
+      <div class="eyebrow">Тестирование</div>
+      <h2>Оставьте отзыв</h2>
+      <p class="hint">Попробуйте ввести свои замеры, полистайте образы и примерку, затем ответьте на несколько вопросов. Это займёт пару минут.</p>
+    </div>
+    <form id="fbForm" class="fb-form" autocomplete="off">
+      <label class="fb-field" for="fbName">Как к вам обращаться <span class="hint">(необязательно)</span><input type="text" id="fbName" maxlength="60"></label>
+      <div class="fb-q" data-q="r1"><span>Насколько точно определён тип фигуры?</span><div class="scale"></div></div>
+      <div class="fb-q" data-q="r2"><span>Насколько полезны готовые образы?</span><div class="scale"></div></div>
+      <div class="fb-q" data-q="r3"><span>Подошли ли размеры?</span><div class="scale"></div></div>
+      <div class="fb-q" data-q="r4"><span>Насколько удобно пользоваться?</span><div class="scale"></div></div>
+      <label class="fb-field" for="fbLiked">Что понравилось<textarea id="fbLiked" rows="3" maxlength="2000"></textarea></label>
+      <label class="fb-field" for="fbImprove">Что не работает или что улучшить<textarea id="fbImprove" rows="3" maxlength="2000"></textarea></label>
+      <label class="fb-check" for="fbAttach"><input type="checkbox" id="fbAttach" checked> Приложить мои замеры и результат подбора</label>
+      <div class="fb-actions"><button class="btn" type="submit">Отправить отзыв</button><span id="fbStatus" class="hint" role="status"></span></div>
+      <div id="fbFallback" class="fb-fallback" hidden>
+        <p>Отправить отзыв автоматически не получилось. Скопируйте текст и отправьте автору любым удобным способом.</p>
+        <textarea id="fbText" rows="8" readonly></textarea>
+        <button class="btn ghost" type="button" id="fbCopy">Скопировать</button>
+      </div>
+    </form>
+    <div id="fbOwner" class="fb-owner" hidden>
+      <div class="head-row"><h3 class="sub" style="margin:0">Отзывы тестировщиков <span id="fbCount" class="cnt"></span></h3><button class="btn ghost" type="button" id="fbRefresh">Обновить</button></div>
+      <div id="fbList" class="fb-list"></div>
+    </div>
+  </section>
+</div>
+
+<div class="pop" id="pop" hidden></div>
+<script>
+/* ---------- справочники ---------- */
+const STYLES={f:[["classic","Классика"],["casual","Кэжуал"],["minimal","Минимализм"],["romantic","Романтичный"],["boho","Бохо"],["street","Стритстайл"],["sport","Спорт-шик"]],
+              m:[["classic","Классика"],["casual","Кэжуал"],["minimal","Минимализм"],["street","Стритстайл"],["sport","Спорт-шик"]]};
+const OCCS=[["work","Работа"],["day","Каждый день"],["evening","Вечер / выход"]];
+const SEASONS=[["all","Всесезонно"],["summer","Лето"],["mid","Межсезонье"],["winter","Зима"]];
+const PREFS={f:[["dress","Платья"],["skirt","Юбки"],["trousers","Брюки"],["jeans","Джинсы"],["shorts","Шорты"],["jumpsuit","Комбинезоны"],["shirt","Рубашки и блузы"],["tee","Футболки и топы"],["knit","Трикотаж"],["hoodie","Худи"],["blazer","Пиджаки"],["coat","Куртки и пальто"],["heels","Каблуки"],["loafers","Лоферы, балетки, сандалии"],["sneakers","Кроссовки и кеды"],["boots","Ботинки и сапоги"],["belt","Ремни и пояса"],["jewelry","Украшения"],["scarf","Шарфы и платки"],["hat","Головные уборы"]],
+             m:[["trousers","Брюки"],["jeans","Джинсы"],["shorts","Шорты"],["shirt","Рубашки"],["tee","Футболки и поло"],["knit","Трикотаж"],["hoodie","Худи"],["blazer","Пиджаки"],["coat","Куртки и пальто"],["loafers","Туфли и лоферы"],["sneakers","Кроссовки и кеды"],["boots","Ботинки"],["belt","Ремни"],["scarf","Шарфы и платки"],["hat","Головные уборы"]]};
+// l: d тёмный, m средний, l светлый; n: нейтральный
+const COLORS=[["Белый","#F7F6F2","l",1],["Молочный","#EDE6D6","l",1],["Бежевый","#D5C3A5","l",1],["Кэмел","#B0814F","m",1],["Серый","#A3A3A8","m",1],["Графит","#45464D","d",1],["Чёрный","#17171A","d",1],["Тёмно-синий","#1F2C4A","d",1],["Голубой","#A9C4DF","l",0],["Оливковый","#6E6E3A","m",1],["Хаки","#8A8661","m",1],["Бордо","#6A1F2E","d",0],["Терракот","#B65A3C","m",0],["Пудровый","#E3BFB8","l",0],["Красный","#C4262E","m",0],["Изумрудный","#1F6B54","d",0],["Горчичный","#C79A2A","m",0],["Лавандовый","#B9A7D3","l",0]];
+const CMAP=Object.fromEntries(COLORS.map(c=>[c[0],{name:c[0],hex:c[1],l:c[2],n:!!c[3]}]));
+
+const SHAPES={
+ f:{
+  hourglass:{name:"Песочные часы",goal:"Плечи и бёдра уравновешены, талия выражена. Задача — сохранить баланс и показывать талию, а не прятать её.",
+   do:["Пояса и акцент на талии","Платья и блузы с запахом","Приталенный крой жакетов","Высокая посадка брюк и юбок","Мягкие ткани, которые следуют фигуре"],
+   avoid:["Мешковатые вещи без линии талии","Прямые «коробчатые» жакеты","Объём только сверху или только снизу","Заниженная посадка"]},
+  pear:{name:"Груша",goal:"Бёдра шире плеч. Задача — добавить визуальный вес плечам и облегчить нижнюю часть.",
+   do:["Светлый или яркий верх, тёмный низ","Вырез «лодочка», детали на плечах","Юбки А-силуэта, джинсы bootcut","Жакет длиной до середины бедра","Обувь с открытым подъёмом удлиняет ногу"],
+   avoid:["Светлые узкие брюки и скинни","Карманы и декор на бёдрах","Топы, которые заканчиваются на самой широкой части бёдер","Узкие плечи без деталей"]},
+  invtri:{name:"Перевёрнутый треугольник",goal:"Плечи и грудь шире бёдер. Задача — смягчить линию плеч и добавить объём внизу.",
+   do:["V-вырез и рукав реглан","Широкие брюки, палаццо, карго","Юбки плиссе и А-силуэта","Тёмный верх, светлый или фактурный низ","Детали и принт в зоне бёдер"],
+   avoid:["Подплечники и пышные рукава","Вырез «лодочка» и горизонтальные полосы на плечах","Узкие юбки-карандаш с объёмным верхом"]},
+  rect:{name:"Прямоугольник",goal:"Плечи, талия и бёдра близки по ширине. Задача — создать изгибы или подчеркнуть графичность силуэта.",
+   do:["Пояса поверх жакетов и платьев","Многослойность и асимметрия","Высокая посадка с заправленным верхом","Графичный оверсайз в паре с открытой зоной","Платья-рубашки с поясом"],
+   avoid:["Прямые бесформенные вещи с головы до ног без акцента","Однотонные трикотажные комплекты без структуры"]},
+  apple:{name:"Яблоко",goal:"Объём сосредоточен в центре силуэта. Задача — вытянуть вертикаль и перенести внимание на декольте, лицо и ноги.",
+   do:["V-вырез и открытая зона шеи","Силуэт ампир и платья с запахом","Удлинённые прямые жакеты нараспашку","Монохром и вертикальные линии","Струящиеся ткани, открытые ноги"],
+   avoid:["Жёсткий контрастный пояс на талии","Облегающий трикотаж в зоне живота","Укороченные куртки","Крупный принт в центре корпуса"]}
+ },
+ m:{
+  trap:{name:"Трапеция",goal:"Плечи шире талии, пропорции сбалансированы. Задача — сохранить естественный силуэт.",
+   do:["Рубашки slim и regular","Чиносы и прямые брюки","Неконструированные пиджаки","Поло и футболки по размеру"],
+   avoid:["Сильно мешковатые вещи, скрывающие пропорции","Слишком узкие вещи, которые тянут по швам"]},
+  invtri:{name:"Атлетический V",goal:"Мощный верх и узкий таз. Задача — уравновесить плечи и не перегружать верх.",
+   do:["Прямые и relaxed брюки, карго","Тёмный верх, более светлый низ","Пиджаки с мягким плечом","Вязаные вещи с V-вырезом"],
+   avoid:["Скинни джинсы","Подплечники и погоны","Горизонтальные полосы на груди","Слишком тесные футболки"]},
+  rect:{name:"Прямоугольник",goal:"Плечи, талия и бёдра близки. Задача — расширить плечи и обозначить талию.",
+   do:["Структурированные пиджаки","Бомберы и куртки до талии","Многослойность: рубашка + джемпер + куртка","Нагрудные карманы, фактура сверху","Слегка зауженные к низу брюки"],
+   avoid:["Мешковатые вещи","Длинные бесформенные худи","Однотонный комплект без слоёв"]},
+  tri:{name:"Треугольник",goal:"Бёдра шире плеч. Задача — визуально расширить плечи и облегчить низ.",
+   do:["Пиджак с чётким плечом","Светлый или фактурный верх, тёмный низ","Прямые брюки средней ширины","Рубашки с нагрудными карманами"],
+   avoid:["Скинни-брюки","Светлые широкие брюки","Карманы-карго на бёдрах"]},
+  oval:{name:"Овал",goal:"Объём в центре корпуса. Задача — вытянуть вертикаль и убрать акцент с живота.",
+   do:["Монохромные комплекты","V-вырез, расстёгнутый воротник","Однобортный пиджак на одну пуговицу","Прямые брюки средней посадки","Вертикальная фактура и тёмный центр"],
+   avoid:["Облегающие поло и футболки","Контрастный ремень","Двубортные пиджаки","Горизонтальные полосы"]}
+ }
+};
+
+// Каталог: "название|категория|пол|тип|стили|фигуры|случаи|сезоны|ткань"
+// стили: c классика, k кэжуал, n минимализм, r романтичный, b бохо, s стрит, p спорт
+// фигуры ж: H часы, P груша, I перевёрн. треугольник, R прямоугольник, A яблоко; м: T трапеция, V атлет, R прямоуг., Y треугольник, O овал; * все
+// случаи: w работа, d день, e вечер; сезоны: s лето, m межсезонье, w зима
+const A="all";
+const CAT_SRC=`
+Блуза с запахом|top|f|shirt|cr|HPRA|wde|smw|вискоза, шёлк
+Рубашка оверсайз|top|f|shirt|kns|PR|dw|sm|хлопок, лён
+Приталенная рубашка|top|f|shirt|cn|HRP|wd|smw|хлопок с эластаном
+Шёлковая блуза с бантом|top|f|shirt|cr|PR|we|smw|шёлк, сатин
+Льняная рубашка|top|f|shirt|knb|*|d|s|лён
+Рубашка в вертикальную полоску|top|f|shirt|ck|AR|wd|sm|хлопок
+Блуза с баской|top|f|shirt|cr|RI|we|smw|костюмная ткань
+Блуза-крестьянка|top|f|shirt|br|PRH|d|s|хлопок, батист
+Блуза с объёмными рукавами|top|f|shirt|r|PR|ed|sm|хлопок, органза
+Туника с разрезами|top|f|shirt|bk|AR|d|sm|хлопок, вискоза
+Топ с V-вырезом|top|f|tee|nk|*|de|sm|трикотаж
+Футболка с вырезом «лодочка»|top|f|tee|kn|PR|d|sm|хлопок
+Базовая белая футболка|top|f|tee|kns|*|d|sm|хлопок
+Лонгслив из плотного трикотажа|top|f|tee|knp|RIH|d|mw|плотный хлопок
+Топ на бретелях|top|f|tee|nr|PHR|e|s|шёлк, вискоза
+Корсетный топ|top|f|tee|rs|RH|e|sm|плотный хлопок
+Боди с длинным рукавом|top|f|tee|nc|HRP|we|mw|джерси
+Топ с асимметричным вырезом|top|f|tee|nr|RPH|e|sm|джерси
+Тонкий джемпер с V-вырезом|top|f|knit|cn|IAHR|wd|mw|меринос
+Тонкая водолазка|top|f|knit|nc|PRH|wd|mw|меринос, вискоза
+Удлинённый кардиган|top|f|knit|kbn|AIR|dw|mw|шерсть, кашемир
+Короткий кардиган|top|f|knit|rk|HPR|d|m|хлопок, шерсть
+Свитер крупной вязки|top|f|knit|kb|PR|d|w|шерсть
+Кашемировый свитер оверсайз|top|f|knit|nk|PR|dw|w|кашемир
+Вязаный жилет|top|f|knit|kn|RA|dw|m|шерсть
+Свободное худи|top|f|hoodie|psk|RP|d|mw|футер
+Свитшот|top|f|hoodie|kps|RP|d|mw|футер
+Широкие брюки с высокой посадкой|bottom|f|trousers|cn|IRHP|wde|smw|костюмная шерсть
+Прямые брюки со стрелками|bottom|f|trousers|cn|*|we|smw|костюмная ткань
+Брюки-палаццо|bottom|f|trousers|nrb|IRH|de|s|вискоза, лён
+Льняные брюки на завязках|bottom|f|trousers|kb|*|d|s|лён
+Укороченные брюки-сигареты|bottom|f|trousers|cn|HR|w|smw|хлопок с эластаном
+Прямые кожаные брюки|bottom|f|trousers|sn|RHI|de|mw|экокожа
+Шерстяные брюки с защипами|bottom|f|trousers|cn|RIA|w|w|шерсть
+Джоггеры|bottom|f|trousers|ps|RI|d|smw|футер
+Свободные карго|bottom|f|trousers|s|IR|d|sm|хлопок
+Джинсы mom с высокой посадкой|bottom|f|jeans|ks|RIH|d|smw|деним
+Джинсы bootcut|bottom|f|jeans|kc|PHA|dw|smw|деним
+Прямые тёмные джинсы|bottom|f|jeans|knc|*|dw|smw|деним
+Джинсы wide leg|bottom|f|jeans|ks|IRH|d|smw|деним
+Джинсы баррел|bottom|f|jeans|sn|IR|d|sm|плотный деним
+Юбка-карандаш|bottom|f|skirt|c|HR|we|smw|костюмная ткань
+Юбка А-силуэта миди|bottom|f|skirt|cr|PAHR|wd|smw|хлопок, шерсть
+Юбка плиссе миди|bottom|f|skirt|rn|IRA|dwe|smw|сатин
+Юбка с запахом|bottom|f|skirt|rb|PHR|d|sm|вискоза
+Атласная юбка-комбинация|bottom|f|skirt|nr|HRI|ed|sm|атлас
+Джинсовая юбка миди|bottom|f|skirt|ks|PRH|d|sm|деним
+Юбка-тюльпан|bottom|f|skirt|rc|IR|we|sm|хлопок
+Шерстяная юбка в клетку|bottom|f|skirt|ck|IRP|wd|mw|шерсть
+Трикотажная юбка-годе|bottom|f|skirt|rc|PH|wd|mw|плотный трикотаж
+Ярусная юбка макси|bottom|f|skirt|b|IR|d|s|хлопок
+Шорты-бермуды|bottom|f|shorts|kn|RHI|d|s|хлопок, лён
+Льняные шорты с высокой посадкой|bottom|f|shorts|kb|HRI|d|s|лён
+Платье с запахом|dress|f|dress|cr|HAPR|wde|smw|джерси, вискоза
+Платье-футляр|dress|f|dress|cn|HR|we|smw|костюмная ткань
+Платье А-силуэта|dress|f|dress|rc|PIA|dw|sm|хлопок
+Платье-рубашка с поясом|dress|f|dress|knc|RAH|wd|sm|хлопок, лён
+Платье-комбинация миди|dress|f|dress|nr|HRI|e|s|шёлк, атлас
+Платье ампир|dress|f|dress|rb|APR|de|s|шифон, вискоза
+Трикотажное платье миди|dress|f|dress|nk|HR|dw|mw|джерси
+Платье-свитер|dress|f|dress|kn|RI|d|w|шерсть
+Сарафан на бретелях|dress|f|dress|kbr|PH|d|s|лён, хлопок
+Платье с V-вырезом и клёшем|dress|f|dress|rc|PIH|ed|sm|креп
+Платье-трапеция|dress|f|dress|nk|IA|d|sm|хлопок
+Вечернее платье с драпировкой|dress|f|dress|cr|AHR|e|smw|джерси, креп
+Платье бохо макси|dress|f|dress|b|IRA|d|s|вискоза
+Комбинезон с широкими брюками|dress|f|jumpsuit|nck|IRH|wde|sm|креп, вискоза
+Джинсовый комбинезон|dress|f|jumpsuit|ks|RI|d|sm|деним
+Комбинезон с запахом|dress|f|jumpsuit|cr|HAP|e|sm|джерси
+Приталенный пиджак|outer|f|blazer|c|HPR|we|smw|костюмная шерсть
+Пиджак оверсайз|outer|f|blazer|nsk|RP|wd|sm|шерсть, лён
+Удлинённый пиджак без застёжки|outer|f|blazer|cn|AI|we|smw|креп
+Льняной пиджак|outer|f|blazer|kn|*|wd|s|лён
+Укороченный твидовый жакет|outer|f|blazer|cr|PHR|we|m|твид
+Удлинённый костюмный жилет|outer|f|blazer|nc|AIR|wd|sm|костюмная ткань
+Тренч с поясом|outer|f|coat|c|HRPI|wd|m|габардин
+Прямое пальто миди|outer|f|coat|nc|ARI|wde|mw|шерсть
+Пальто-халат с поясом|outer|f|coat|cr|HRP|wd|mw|шерсть, кашемир
+Укороченная джинсовая куртка|outer|f|coat|ks|PHR|d|sm|деним
+Бомбер|outer|f|coat|ps|RP|d|m|нейлон
+Кожаная косуха|outer|f|coat|sk|PHR|de|m|кожа
+Стёганая куртка|outer|f|coat|kc|RIA|d|m|нейлон, утеплитель
+Ветровка-анорак|outer|f|coat|p|RP|d|sm|нейлон
+Короткий пуховик|outer|f|coat|ps|PRH|d|w|пух, нейлон
+Длинный пуховик с поясом|outer|f|coat|kn|HRI|dw|w|пух
+Дублёнка-авиатор|outer|f|coat|sk|PRH|d|w|овчина
+Прямая шуба из искусственного меха|outer|f|coat|cn|IRA|de|w|искусственный мех
+Лодочки с острым мысом|shoes|f|heels|cn|*|we|sm|кожа
+Босоножки на устойчивом каблуке|shoes|f|heels|rc|*|ed|s|кожа
+Мюли на невысоком каблуке|shoes|f|heels|nr|*|de|s|кожа
+Лоферы|shoes|f|loafers|cn|*|wd|sm|кожа
+Балетки с острым мысом|shoes|f|loafers|rc|IRH|dw|sm|кожа
+Сандалии на плоской подошве|shoes|f|loafers|kb|*|d|s|кожа
+Эспадрильи|shoes|f|loafers|kb|*|d|s|холст, джут
+Белые кеды|shoes|f|sneakers|knsp|*|d|sm|кожа
+Массивные кроссовки|shoes|f|sneakers|sp|RI|d|sm|кожа, сетка
+Ботильоны на каблуке|shoes|f|boots|kc|*|dwe|mw|кожа, замша
+Сапоги-казаки|shoes|f|boots|b|IRH|d|m|кожа
+Высокие сапоги на каблуке|shoes|f|boots|cr|HRP|we|w|кожа
+Сапоги-чулки|shoes|f|boots|nr|HRI|e|mw|стрейч-кожа
+Челси на массивной подошве|shoes|f|boots|sk|RI|d|mw|кожа
+Зимние ботинки на шнуровке|shoes|f|boots|ks|*|d|w|кожа, мех
+Угги|shoes|f|boots|k|RI|d|w|овчина
+Тонкий кожаный ремень|acc|f|belt|cn|HRP|wde|smw|кожа
+Широкий пояс|acc|f|belt|rc|HR|de|smw|кожа
+Структурная сумка-тоут|acc|f|bag|cn|*|w|smw|кожа
+Сумка через плечо|acc|f|bag|kns|*|d|smw|кожа
+Клатч|acc|f|bag|cr|*|e|smw|кожа, атлас
+Длинные серьги|acc|f|jewelry|rn|AIR|e|smw|металл
+Длинная подвеска|acc|f|jewelry|nk|AR|wd|smw|металл
+Шёлковый платок на шею|acc|f|scarf|cr|PR|wd|sm|шёлк
+Объёмный шарф|acc|f|scarf|kn|PR|d|w|шерсть
+Берет|acc|f|hat|rc|*|d|mw|шерсть
+Соломенная шляпа|acc|f|hat|bk|*|d|s|солома
+Оксфорд-рубашка|top|m|shirt|ck|*|wd|smw|хлопок оксфорд
+Рубашка slim-fit|top|m|shirt|cn|TVR|we|smw|поплин
+Рубашка прямого кроя в мелкую клетку|top|m|shirt|k|OYR|d|mw|фланель
+Льняная рубашка|top|m|shirt|kn|*|d|s|лён
+Рубашка с кубинским воротником|top|m|shirt|ks|TRY|de|s|вискоза
+Рубашка с нагрудными карманами|top|m|shirt|ks|RY|d|sm|хлопок твил
+Рубашка-овершот|top|m|shirt|ks|YRO|d|m|шерсть
+Поло пике|top|m|tee|kcp|TVRY|dw|sm|хлопок пике
+Трикотажное поло с длинным рукавом|top|m|tee|cn|TVR|we|m|меринос
+Футболка с круглым вырезом|top|m|tee|kn|TVR|d|sm|хлопок
+Тёмная футболка с V-вырезом|top|m|tee|nk|OYR|d|sm|хлопок
+Плотная футболка оверсайз|top|m|tee|s|RY|d|sm|плотный хлопок
+Хенли|top|m|tee|k|RTY|d|smw|хлопок
+Мериносовый джемпер|top|m|knit|cn|*|wde|mw|меринос
+Кардиган на пуговицах|top|m|knit|ck|ORY|wd|mw|шерсть
+Тонкая водолазка|top|m|knit|nc|TVR|we|mw|меринос
+Свитер крупной вязки|top|m|knit|k|RY|d|w|шерсть
+Свитер с воротником на молнии|top|m|knit|kc|RYT|dw|mw|шерсть
+Вязаный жилет|top|m|knit|kc|RY|wd|m|шерсть
+Худи|top|m|hoodie|ps|RYT|d|mw|футер
+Свитшот|top|m|hoodie|kps|RYT|d|mw|футер
+Прямые чиносы|bottom|m|trousers|ck|*|wd|smw|хлопок твил
+Классические брюки со стрелкой|bottom|m|trousers|cn|*|we|smw|шерсть
+Свободные брюки с защипами|bottom|m|trousers|cn|VYOR|we|mw|шерсть
+Льняные брюки|bottom|m|trousers|kn|*|d|s|лён
+Вельветовые брюки|bottom|m|trousers|ck|VRT|d|w|вельвет
+Карго|bottom|m|trousers|s|VR|d|sm|рипстоп
+Джоггеры|bottom|m|trousers|ps|TRV|d|smw|футер
+Прямые тёмные джинсы|bottom|m|jeans|kn|*|dw|smw|деним
+Чёрные прямые джинсы|bottom|m|jeans|ns|*|de|smw|деним
+Джинсы slim-tapered|bottom|m|jeans|ks|TR|de|smw|деним
+Джинсы relaxed|bottom|m|jeans|ks|VYO|d|smw|деним
+Шорты-чинос|bottom|m|shorts|k|TVR|d|s|хлопок
+Льняные шорты|bottom|m|shorts|kn|TVRY|d|s|лён
+Однобортный структурированный пиджак|outer|m|blazer|c|YROT|we|smw|шерсть
+Неконструированный пиджак|outer|m|blazer|kn|TVR|wde|sm|шерсть, лён
+Льняной пиджак|outer|m|blazer|kn|*|wd|s|лён
+Твидовый пиджак|outer|m|blazer|ck|RYT|wd|mw|твид
+Костюмный жилет|outer|m|blazer|c|TVR|we|smw|шерсть
+Прямое тёмное пальто|outer|m|coat|cn|*|wed|mw|шерсть
+Двубортное пальто|outer|m|coat|c|TVR|we|w|шерсть
+Тренч|outer|m|coat|c|TVR|wd|m|габардин
+Харрингтон|outer|m|coat|kc|RTY|d|m|хлопок
+Бомбер|outer|m|coat|psk|RYT|d|m|нейлон
+Куртка-рубашка|outer|m|coat|ks|RTY|d|m|шерсть
+Кожаная куртка|outer|m|coat|sk|TRY|de|m|кожа
+Джинсовая куртка|outer|m|coat|ks|RYT|d|sm|деним
+Полевая куртка M-65|outer|m|coat|ks|RYV|d|m|хлопок
+Удлинённая парка|outer|m|coat|ks|OYR|d|w|нейлон, пух
+Пуховик средней длины|outer|m|coat|kn|*|d|w|пух
+Дублёнка|outer|m|coat|kc|RTY|d|w|овчина
+Оксфорды|shoes|m|loafers|c|*|we|smw|кожа
+Дерби|shoes|m|loafers|ck|*|wd|smw|кожа
+Монки|shoes|m|loafers|c|*|we|smw|кожа
+Лоферы|shoes|m|loafers|cn|*|wde|sm|кожа, замша
+Эспадрильи|shoes|m|loafers|k|*|d|s|холст
+Минималистичные кеды|shoes|m|sneakers|nk|*|d|sm|кожа
+Кроссовки|shoes|m|sneakers|ps|*|d|sm|сетка
+Замшевые ретро-кроссовки|shoes|m|sneakers|ks|*|d|sm|замша
+Челси|shoes|m|boots|cnk|*|wde|mw|кожа, замша
+Дезерты|shoes|m|boots|ck|*|wd|m|замша
+Ботинки на шнуровке|shoes|m|boots|ks|*|d|mw|кожа
+Зимние ботинки на меху|shoes|m|boots|k|*|d|w|кожа, мех
+Кожаный ремень в тон обуви|acc|m|belt|cn|*|wde|smw|кожа
+Кожаный портфель|acc|m|bag|c|*|w|smw|кожа
+Минималистичный рюкзак|acc|m|bag|nks|*|d|smw|нейлон, кожа
+Карманный платок|acc|m|scarf|c|RY|e|smw|шёлк
+Шерстяной шарф|acc|m|scarf|ck|*|dw|w|шерсть
+Кепка-бейсболка|acc|m|hat|ps|*|d|sm|хлопок
+Шапка-бини|acc|m|hat|ks|*|d|w|шерсть
+`;
+const SHC={f:{H:"hourglass",P:"pear",I:"invtri",R:"rect",A:"apple"},m:{T:"trap",V:"invtri",R:"rect",Y:"tri",O:"oval"}};
+const STC={c:"classic",k:"casual",n:"minimal",r:"romantic",b:"boho",s:"street",p:"sport"};
+const OCC_C={w:"work",d:"day",e:"evening"}, SEA_C={s:"summer",m:"mid",w:"winter"};
+const ITEMS=CAT_SRC.trim().split("\n").map((line,i)=>{
+  const [name,cat,g,pref,st,sh,oc,se,fabric]=line.split("|");
+  return {id:i,name,cat,g,pref,fabric,
+    styles:[...st].map(x=>STC[x]),
+    shapes:sh==="*"?[A]:[...sh].map(x=>SHC[g][x]),
+    occ:[...oc].map(x=>OCC_C[x]),
+    season:[...se].map(x=>SEA_C[x])};
+});
+
+/* ---------- состояние ---------- */
+const SAMPLE={name:"Пример: Айгерим",g:"f",age:34,height:166,weight:64,shoulders:37,bust:92,waist:72,hips:102,
+  missing:[],ov:{},season:"mid",styles:["casual","classic"],occ:["work","day","evening"],prefs:{jeans:1,dress:1,shorts:-1,hoodie:-1},colors:{"Тёмно-синий":1,"Бежевый":1,"Изумрудный":1,"Горчичный":-1}};
+let S=structuredClone(SAMPLE);
+let occView="all";
+const $=id=>document.getElementById(id);
+const store={get(){try{return JSON.parse(localStorage.getItem("atelier-profiles")||"{}")}catch(e){return{}}},set(v){try{localStorage.setItem("atelier-profiles",JSON.stringify(v))}catch(e){}}};
+
+/* ---------- анализ ---------- */
+function classify(s){
+  const b=s.bust,w=s.waist,h=s.hips,sh=s.shoulders;
+  if(s.g==="f"){
+    if(w/b>=0.88&&w/h>=0.82) return "apple";
+    if(Math.abs(b-h)<9&&(b-w>=23||h-w>=25)) return "hourglass";
+    if(h-b>=9) return "pear";
+    if(b-h>=9||(sh>=41&&b-h>=4)) return "invtri";
+    return "rect";
+  }
+  if(w>=b*0.96) return "oval";
+  if((sh>=48||b-w>=18)&&b-h>=6) return "invtri";
+  if(h-b>=3) return "tri";
+  if(b-w>=10) return "trap";
+  return "rect";
+}
+function analyze(s){
+  const bmi=s.weight/((s.height/100)**2);
+  const whr=s.waist/s.hips;
+  const shape=classify(s);
+  const hcat=s.g==="f"?(s.height<160?"petite":s.height>175?"tall":"mid"):(s.height<170?"petite":s.height>185?"tall":"mid");
+  const notes=[];
+  if(hcat==="petite") notes.push(s.g==="f"?"Невысокий рост: держите вертикаль — монохром низа и обуви, высокая посадка, длина миди чуть ниже колена или укороченные брюки до щиколотки. Избегайте макси без каблука и крупных принтов.":"Невысокий рост: укороченные брюки без заломов, обувь в тон брюкам, пиджаки длиной до середины ягодиц, единый цвет верха и низа.");
+  if(hcat==="tall") notes.push(s.g==="f"?"Высокий рост: свободно носите макси, широкие брюки, длинные пальто, крупные принты и горизонтальное деление цветом.":"Высокий рост: удачны многослойность, контраст верха и низа, длинные пальто, брюки с отворотом.");
+  if(bmi>=27) notes.push("Выбирайте плотные держащие форму ткани (костюмная шерсть, плотный хлопок, джерси) и посадку по размеру — вещи не должны ни облегать, ни висеть.");
+  if(bmi<18.5) notes.push("Фактурные и плотные ткани, многослойность и светлые оттенки добавят силуэту объёма.");
+  if(s.age>=45) notes.push("Ставка на качество тканей и чёткий крой, мягкие светлые оттенки у лица, минимум излишне молодёжных деталей.");
+  if(s.age<25) notes.push("Можно смелее экспериментировать с оверсайзом, принтами и стритстайлом — фигура это легко выдерживает.");
+  return {bmi,whr,shape,hcat,notes};
+}
+
+function itemScore(it,s,shape,occ){
+  if(it.g!==s.g) return null;
+  if(s.prefs[it.pref]===-1) return null;
+  if(occ&&!it.occ.includes(occ)) return null;
+  if(s.missing&&s.missing.includes(it.g+"|"+it.name)) return null;
+  if(s.season&&s.season!=="all"&&!it.season.includes(s.season)) return null;
+  let sc=0;
+  const fits=it.shapes.includes(A)||it.shapes.includes(shape);
+  sc+=fits?4:-3;
+  const sm=it.styles.filter(x=>s.styles.includes(x)).length;
+  sc+=Math.min(sm,2)*2;
+  if(s.prefs[it.pref]===1) sc+=3;
+  return {sc,fits};
+}
+function pick(cat,s,shape,occ,used,filter){
+  let best=null;
+  for(const it of ITEMS){
+    if(it.cat!==cat||(filter&&!filter(it))) continue;
+    const r=itemScore(it,s,shape,occ); if(!r) continue;
+    const v=r.sc-(used[it.id]||0)*3.2;
+    if(!best||v>best.v) best={it,v,fits:r.fits};
+  }
+  if(best) used[best.it.id]=(used[best.it.id]||0)+1;
+  return best;
+}
+function palette(s){
+  const liked=Object.keys(s.colors).filter(k=>s.colors[k]===1).map(k=>CMAP[k]);
+  const avoid=new Set(Object.keys(s.colors).filter(k=>s.colors[k]===-1));
+  let neutrals=liked.filter(c=>c.n);
+  for(const n of ["Тёмно-синий","Белый","Бежевый","Графит","Молочный","Чёрный"]) if(!avoid.has(n)&&!neutrals.find(c=>c.name===n)) neutrals.push(CMAP[n]);
+  let accents=liked.filter(c=>!c.n);
+  if(!accents.length) accents=["Бордо","Изумрудный","Голубой"].filter(n=>!avoid.has(n)).map(n=>CMAP[n]);
+  return {neutrals,accents,liked,avoid:[...avoid].map(n=>CMAP[n])};
+}
+const darkN=p=>p.neutrals.filter(c=>c.l==="d");
+const lightN=p=>p.neutrals.filter(c=>c.l!=="d");
+function colorize(o,shape,p,i){
+  const D=darkN(p).length?darkN(p):p.neutrals, L=lightN(p).length?lightN(p):p.neutrals, Acc=p.accents.length?p.accents:L;
+  const at=(arr,k)=>arr[((k%arr.length)+arr.length)%arr.length];
+  const c={};
+  if(o.dress){
+    c.dress=(i%2===0)?at(Acc,i):at(D,i);
+    if(o.outer) c.outer=c.dress.l==="d"?at(L,i):at(D,i+1);
+  }else{
+    if(shape==="pear"||shape==="tri"){c.top=(i%2===0)?at(Acc,i):at(L,i);c.bottom=at(D,i);}
+    else if(shape==="invtri"){c.top=at(D,i);c.bottom=(i%2===0)?at(L,i):at(Acc,i);}
+    else if(shape==="apple"||shape==="oval"){c.top=at(D,i);c.bottom=c.top;}
+    else{c.top=(i%2===0)?at(Acc,i):at(L,i+1);c.bottom=at(D,i);}
+    if(o.outer) c.outer=(shape==="apple"||shape==="oval")?at(L,i):(c.top.l==="d"?at(L,i+1):at(D,i+1));
+  }
+  c.shoes=at(D,i+2);
+  if(c.shoes===c.bottom&&D.length>1) c.shoes=at(D,i+3);
+  if(o.acc) c.acc=o.acc.it.pref==="belt"?c.shoes:(o.acc.it.pref==="jewelry"?CMAP["Кэмел"]:at(Acc,i+1));
+  return c;
+}
+function buildOutfits(s,shape){
+  const p=palette(s);
+  const used={}; const out=[];
+  const occs=s.occ.length?s.occ:OCCS.map(o=>o[0]);
+  const OV=s.ov||{};
+  let idx=0; const seen=new Set();
+  for(const occ of occs){
+    for(let v=0;v<perOcc;v++){
+      const wantDress=s.g==="f"&&v%3===1;
+      const o={occ,parts:[],key:occ+"|"+v};
+      if(wantDress){ const d=pick("dress",s,shape,occ,used); if(d) o.dress=d; }
+      if(!o.dress){
+        o.top=pick("top",s,shape,occ,used); o.bottom=pick("bottom",s,shape,occ,used);
+        if(!o.top||!o.bottom) continue;
+      }
+      const sea=s.season||"all";
+      if(sea==="winter") o.outer=pick("outer",s,shape,occ,used,it=>it.pref==="coat")||pick("outer",s,shape,occ,used);
+      else if(sea==="summer"){ if(occ!=="day"&&v%2===0) o.outer=pick("outer",s,shape,occ,used,it=>it.pref==="blazer"); }
+      else if(occ!=="day"||v%2===0) o.outer=pick("outer",s,shape,occ,used);
+      o.shoes=pick("shoes",s,shape,occ,used);
+      o.acc=pick("acc",s,shape,occ,used,it=>!(it.pref==="belt"&&(o.outer&&sea==="winter")));
+      const c=colorize(o,shape,p,idx);
+      const order=o.dress?["outer","dress","shoes","acc"]:["outer","top","bottom","shoes","acc"];
+      const ov=OV[o.key]||{};
+      for(const k of order){
+        let part=o[k]; const sw=ov[k];
+        if(sw&&sw.id!=null){const it=ITEMS[sw.id];const r=it&&it.cat===(k==="dress"?"dress":k)&&itemScore(it,s,shape,occ);if(r) part={it,v:r.sc,fits:r.fits};}
+        if(!part) continue;
+        const color=(sw&&sw.color&&CMAP[sw.color])||c[k];
+        o.parts.push({...part,role:k,color,edited:!!sw});
+      }
+      const sig=occ+":"+o.parts.map(x=>x.it.id).sort().join(",");
+      if(seen.has(sig)) continue; seen.add(sig);
+      out.push(o); idx++;
+    }
+  }
+  return {outfits:out,palette:p};
+}
+
+/* ---------- геометрия фигуры ---------- */
+function geo(s){
+  const H=330*Math.min(1.08,Math.max(.82,s.height/180));
+  const y0=390-H, k=H/s.height, cx=100, W=c=>c/2.75*k/2;
+  const Y=f=>y0+f*H;
+  const g={cx,H,y0,k,Y,sh:s.shoulders*k/2*1.02,bu:W(s.bust),wa:W(s.waist),hi:W(s.hips)*1.02,
+    headR:H*0.062,nY:Y(.15),shY:Y(.185),buY:Y(.27),waY:Y(.385),hiY:Y(.5),crY:Y(.53),knY:Y(.74),anY:Y(.965)};
+  g.nk=g.headR*.45; return g;
+}
+function bw(g,y){
+  const pts=[[g.shY,g.sh],[g.buY,g.bu],[g.waY,g.wa],[g.hiY,g.hi],[g.knY,g.hi*.72],[g.anY,g.hi*.45]];
+  if(y<=pts[0][0]) return pts[0][1];
+  for(let i=1;i<pts.length;i++) if(y<=pts[i][0]){const [a,w0]=pts[i-1],[b,w1]=pts[i];return w0+(w1-w0)*(y-a)/(b-a);}
+  return pts[pts.length-1][1];
+}
+const armD=(g,s)=>`M${g.cx+s*g.sh},${g.shY+6} Q${g.cx+s*(g.sh+10)},${g.waY} ${g.cx+s*(g.hi+9)},${g.Y(.54)}`;
+function bodyG(g){
+  const {cx,sh,bu,wa,hi,headR,nY,shY,buY,waY,hiY,crY,knY,anY,nk,y0}=g;
+  const half=sgn=>{const x=v=>cx+sgn*v;
+    return `M${x(nk)},${nY} Q${x(nk)},${shY-3} ${x(sh)},${shY+4} C${x(sh+1)},${shY+16} ${x(bu)},${buY-12} ${x(bu)},${buY} C${x(bu)},${buY+14} ${x(wa)},${waY-14} ${x(wa)},${waY} C${x(wa)},${waY+16} ${x(hi)},${hiY-20} ${x(hi)},${hiY} C${x(hi)},${hiY+30} ${x(hi*.78)},${knY-40} ${x(hi*.62)},${knY} L${x(hi*.42)},${anY} L${x(6)},${anY} L${x(5)},${knY} L${x(1.5)},${crY} L${cx},${crY}`;};
+  return `<g fill="var(--body)" stroke="var(--body-line)" stroke-width="1.2" stroke-linejoin="round">
+    <path d="${armD(g,-1)}" fill="none" stroke-width="7" stroke="var(--body)"/><path d="${armD(g,1)}" fill="none" stroke-width="7" stroke="var(--body)"/>
+    <path d="${half(-1)}"/><path d="${half(1)}"/>
+    <path d="M${cx-wa+1},${waY} L${cx+wa-1},${waY} L${cx+hi-2},${hiY} L${cx},${crY} L${cx-hi+2},${hiY}Z" stroke="none"/>
+    <path d="M${cx-nk},${nY} L${cx+nk},${nY} L${cx+bu-2},${buY} L${cx+wa-1},${waY} L${cx-wa+1},${waY} L${cx-bu+2},${buY}Z" stroke="none"/>
+    <ellipse cx="${cx}" cy="${y0+headR}" rx="${headR*.82}" ry="${headR}"/></g>`;
+}
+function figureSVG(s,shape){
+  const g=geo(s),{y0,H,cx,sh,bu,wa,hi,shY,buY,waY,hiY}=g;
+  const tape=(y,w,val)=>`<line x1="${cx-w-4}" x2="${cx+w+4}" y1="${y}" y2="${y}" stroke="var(--accent)" stroke-width="2.5" stroke-dasharray="3 2"/><text x="${cx+w+8}" y="${y+4}" font-size="10" font-family="JetBrains Mono, monospace" fill="var(--muted)">${val}</text>`;
+  return `<svg viewBox="0 0 200 400" role="img" aria-label="Схема фигуры: ${SHAPES[s.g][shape].name}">
+   <line x1="18" x2="18" y1="${y0}" y2="390" stroke="var(--line)" stroke-width="1"/>
+   ${[0,.25,.5,.75,1].map(f=>`<line x1="14" x2="22" y1="${y0+f*H}" y2="${y0+f*H}" stroke="var(--line)"/>`).join("")}
+   <text x="22" y="${y0-6}" font-size="10" font-family="JetBrains Mono, monospace" fill="var(--muted)">${s.height} см</text>
+   ${bodyG(g)}
+   ${tape(shY+4,sh,s.shoulders)}${tape(buY,bu,s.bust)}${tape(waY,wa,s.waist)}${tape(hiY,hi,s.hips)}
+  </svg>`;
+}
+
+/* ---------- примерка: одежда на фигуре ---------- */
+const f1=n=>(+n).toFixed(1);
+const sym=(g,pts)=>"M"+[...pts.map(([d,y])=>`${f1(g.cx-d)},${f1(y)}`),...pts.slice().reverse().map(([d,y])=>`${f1(g.cx+d)},${f1(y)}`)].join(" L")+"Z";
+const ST='stroke="var(--body-line)" stroke-width="1" stroke-linejoin="round"';
+const fillP=(d,col)=>`<path d="${d}" fill="${col}" ${ST}/>`;
+const sleeve=(g,col,len,w=10)=>[-1,1].map(s=>`<path d="${armD(g,s)}" fill="none" stroke="var(--body-line)" stroke-width="${w+2}" stroke-linecap="round" pathLength="1" stroke-dasharray="${len} 3"/><path d="${armD(g,s)}" fill="none" stroke="${col}" stroke-width="${w}" stroke-linecap="round" pathLength="1" stroke-dasharray="${len} 3"/>`).join("");
+
+function topSVG(g,it,col,tucked){
+  const n=it.name.toLowerCase(),{cx,nk,nY,shY,buY,waY,hiY,sh,bu,wa,hi,H}=g;
+  const loose=/оверсайз|худи|свитшот|крупной|туника|удлин|овершот/.test(n);
+  const sleeveless=/бретел|жилет|корсет/.test(n);
+  const shortS=/футболк|топ|хенли|поло|кубинск/.test(n)&&!/длинн/.test(n);
+  const hem=tucked&&!loose?waY+3:(loose?hiY+10:hiY-3);
+  const e=loose?1.12:1.03;
+  const pts=sleeveless?[[nk*.9,shY+2],[sh*.62,shY+3]]:[[nk+1,nY+1],[sh+2,shY+3]];
+  pts.push([bu*e+1.5,buY]);
+  if(loose){const w=Math.max(bu,hi)*e+1.5;pts.push([w,waY],[w,hem]);}
+  else{pts.push([wa*e+1.5,waY]); if(hem>waY+4) pts.push([bw(g,hem)*e+1.5,hem]);}
+  let s="";
+  if(!sleeveless) s+=sleeve(g,col,shortS?.3:1,/объёмными/.test(n)?15:10);
+  s+=fillP(sym(g,pts),col);
+  if(/водолаз|свитер с вор/.test(n)) s+=`<rect x="${cx-nk}" y="${nY-H*.025}" width="${nk*2}" height="${H*.035}" fill="${col}" ${ST}/>`;
+  else if(!sleeveless) s+=`<path d="M${cx-nk+1},${nY+1} L${cx},${nY+H*(/v-|запах/.test(n)?.07:.025)} L${cx+nk-1},${nY+1}Z" fill="var(--body)"/>`;
+  if(/кардиган|рубашк|оксфорд|блуза|овершот|хенли/.test(n)) s+=`<line x1="${cx}" x2="${cx}" y1="${nY+H*.04}" y2="${hem}" stroke="var(--body-line)" stroke-width=".8" opacity=".6"/>`;
+  return s;
+}
+function bottomSVG(g,it,col){
+  const n=it.name.toLowerCase(),{cx,waY,hiY,crY,knY,anY,wa,hi,Y}=g;
+  if(it.pref==="skirt"){
+    const maxi=/макси|ярус/.test(n),pencil=/карандаш|комбинац/.test(n);
+    const hemY=maxi?anY-4:pencil?knY+4:knY+(anY-knY)*.32, hw=maxi?hi*1.45:pencil?hi*.9:hi*1.3;
+    return fillP(sym(g,[[wa+1,waY],[hi+1.5,hiY],[hw,hemY]]),col);
+  }
+  if(it.pref==="shorts"){
+    const hemY=/бермуд/.test(n)?knY-4:Y(.63);
+    return fillP(`M${cx-wa-1},${waY} L${cx-hi-1.5},${hiY} L${cx-hi*.95},${hemY} L${cx-2},${hemY} L${cx},${crY+2} L${cx+2},${hemY} L${cx+hi*.95},${hemY} L${cx+hi+1.5},${hiY} L${cx+wa+1},${waY}Z`,col);
+  }
+  let t="straight";
+  if(/широк|палаццо|wide|карго|relaxed|защип|баррел/.test(n)) t="wide";
+  else if(/bootcut|клёш/.test(n)) t="flare";
+  else if(/скинни|сигарет|slim|tapered|джоггер/.test(n)) t="slim";
+  const [ko,ki,ho,hin]={wide:[.95,.12,1,.12],straight:[.7,.08,.6,.1],slim:[.62,.07,.44,.1],flare:[.62,.06,.8,.04]}[t].map(x=>x*hi);
+  const hemY=/укороч|сигарет/.test(n)?Y(.92):anY-1;
+  return fillP(`M${cx-wa-1},${waY} L${cx-hi-1.5},${hiY} L${cx-ko},${knY} L${cx-ho},${hemY} L${cx-hin},${hemY} L${cx-ki},${knY} L${cx},${crY+2} L${cx+ki},${knY} L${cx+hin},${hemY} L${cx+ho},${hemY} L${cx+ko},${knY} L${cx+hi+1.5},${hiY} L${cx+wa+1},${waY}Z`,col)
+    +`<line x1="${cx}" x2="${cx}" y1="${waY}" y2="${crY}" stroke="var(--body-line)" stroke-width=".7" opacity=".5"/>`;
+}
+function dressSVG(g,it,col){
+  const n=it.name.toLowerCase(),{cx,nk,nY,shY,buY,waY,hiY,knY,anY,sh,bu,wa,hi,H}=g;
+  if(it.pref==="jumpsuit") return bottomSVG(g,{name:/джинс/.test(n)?"прямые":"широкие",pref:"trousers"},col)+topSVG(g,{name:/запах/.test(n)?"блуза с запахом":"топ"},col,true);
+  const sleeveless=/бретел|комбинац|сарафан/.test(n), longS=/свитер|запах|рубашка|драпиров|трикотаж/.test(n);
+  const maxi=/макси/.test(n), sheath=/футляр|комбинац|трикотаж|свитер|драпиров/.test(n);
+  const hemY=maxi?anY-4:/свитер/.test(n)?knY-8:/комбинац/.test(n)?knY+(anY-knY)*.35:sheath?knY+3:knY+(anY-knY)*.28;
+  const hw=maxi?hi*1.45:sheath?hi*.92:hi*1.3;
+  const top0=sleeveless?[[nk*.9,shY+2],[sh*.62,shY+3]]:[[nk+1,nY+1],[sh+2,shY+3]];
+  let pts;
+  if(/трапец/.test(n)) pts=[...top0,[bu+2,buY],[hw,hemY]];
+  else if(/ампир/.test(n)) pts=[...top0,[bu+1.5,buY],[bu*.95,buY+8],[hw,hemY]];
+  else pts=[...top0,[bu+1.5,buY],[wa+1.5,waY],[hi+1.5,hiY],[hw,hemY]];
+  let s=sleeveless?"":sleeve(g,col,longS?1:.3);
+  s+=fillP(sym(g,pts),col);
+  if(!sleeveless) s+=`<path d="M${cx-nk+1},${nY+1} L${cx},${nY+H*.06} L${cx+nk-1},${nY+1}Z" fill="var(--body)"/>`;
+  if(/пояс/.test(n)) s+=`<rect x="${cx-wa-2}" y="${waY-2}" width="${wa*2+4}" height="4" fill="var(--ink)" opacity=".7"/>`;
+  return s;
+}
+function outerSVG(g,it,col){
+  const n=it.name.toLowerCase(),{cx,nk,nY,shY,buY,waY,hiY,knY,sh,bu,hi,H,Y}=g;
+  const vest=/жилет/.test(n);
+  let hem=hiY+12;
+  if(/пальто|тренч|парка|шуба|длинный|халат/.test(n)) hem=knY+6;
+  else if(/пуховик средней|удлин/.test(n)) hem=Y(.64);
+  else if(/твид|косух|джинсов|укороч/.test(n)&&!/твидовый пиджак/.test(n)) hem=waY+8;
+  else if(/куртк|бомбер|харрингтон|авиатор|анорак|пуховик|дублёнк|m-65/.test(n)) hem=hiY;
+  const belted=/пояс|халат|тренч/.test(n);
+  const boxy=/пальто|оверсайз|пуховик|парка|шуба|дублёнк|без застёжки/.test(n)&&!belted;
+  const pad=/пуховик|парка|шуба|дублёнк/.test(n)?6:3.5;
+  const ox=y=>{
+    if(y<=shY+3) return (vest?sh*.8:sh)+pad;
+    let w=bw(g,y);
+    if(y>hiY) w=hi+(y-hiY)*(belted?.12:.05);
+    else if(boxy&&y>buY) w=Math.max(bu,bw(g,y));
+    return w+pad;
+  };
+  const levels=[shY+3,buY,waY,hiY,Y(.62),knY].filter(y=>y<hem-2); levels.push(hem);
+  const gap=belted?0:4;
+  const panel=sg=>"M"+[[cx+sg*(nk+1),nY+1],...levels.map(y=>[cx+sg*ox(y),y]),[cx+sg*gap,hem],[cx+sg*gap,buY+4],[cx+sg*nk*.3,nY+H*.075]].map(p=>p.map(f1).join(",")).join(" L")+"Z";
+  let s=vest?"":sleeve(g,col,1,pad>5?14:12);
+  s+=fillP(panel(-1),col)+fillP(panel(1),col);
+  if(belted) s+=`<rect x="${cx-ox(waY)}" y="${waY-2.5}" width="${ox(waY)*2}" height="5" fill="${col}" ${ST}/>`;
+  if(/пуховик|стёган|парка/.test(n)) for(let y=shY+16;y<hem-4;y+=13) s+=[-1,1].map(sg=>`<line x1="${cx+sg*gap}" x2="${cx+sg*(ox(y)-1)}" y1="${y}" y2="${y}" stroke="var(--body-line)" stroke-width=".7" opacity=".55"/>`).join("");
+  return s;
+}
+function shoesSVG(g,it,col){
+  const n=it.name.toLowerCase(),{cx,knY,anY,hi,Y}=g;
+  const lc=(hi*.42+6)/2, aw=Math.max(3,(hi*.42-6)/2)+1.5;
+  let top=null;
+  if(/высокие|чулки|казаки/.test(n)) top=knY+6; else if(/угги/.test(n)) top=Y(.86); else if(/ботил|челси|ботинки|дезерт|зимние/.test(n)) top=Y(.905);
+  return [-1,1].map(s=>{const x=cx+s*lc;
+    return (top?`<rect x="${x-aw}" y="${top}" width="${aw*2}" height="${anY+2-top}" rx="2" fill="${col}" ${ST}/>`:"")+
+      `<ellipse cx="${x+s*3}" cy="${anY+2.5}" rx="${aw+5}" ry="3.6" fill="${col}" ${ST}/>`;}).join("");
+}
+function accSVG(g,it,col){
+  const n=it.name.toLowerCase(),{cx,nk,nY,shY,buY,waY,hiY,sh,bu,wa,hi,H,Y,y0,headR}=g;
+  switch(it.pref){
+    case "belt": return `<rect x="${cx-wa-2}" y="${waY-2}" width="${wa*2+4}" height="4.5" fill="${col}" ${ST}/><rect x="${cx-3}" y="${waY-3}" width="6" height="6.5" fill="none" stroke="var(--accent)" stroke-width="1.2"/>`;
+    case "bag":
+      if(/клатч/.test(n)) return `<rect x="${cx+hi+4}" y="${Y(.535)}" width="16" height="8" rx="1.5" fill="${col}" ${ST}/>`;
+      if(/рюкзак/.test(n)) return [-1,1].map(s=>`<line x1="${cx+s*(sh-6)}" y1="${shY+2}" x2="${cx+s*(bu-4)}" y2="${buY+14}" stroke="${col}" stroke-width="3" stroke-linecap="round"/>`).join("");
+      if(/через плечо/.test(n)) return `<line x1="${cx-sh+4}" y1="${shY+2}" x2="${cx+hi+4}" y2="${hiY-4}" stroke="${col}" stroke-width="2"/><rect x="${cx+hi-2}" y="${hiY-6}" width="15" height="12" rx="2" fill="${col}" ${ST}/>`;
+      return `<path d="M${cx+hi+8},${Y(.5)} q6,-10 12,0" fill="none" stroke="${col}" stroke-width="2"/><rect x="${cx+hi+4}" y="${Y(.5)}" width="20" height="17" rx="2" fill="${col}" ${ST}/>`;
+    case "jewelry":
+      if(/серьги/.test(n)) return [-1,1].map(s=>`<line x1="${cx+s*headR*.8}" y1="${y0+headR*1.15}" x2="${cx+s*headR*.8}" y2="${y0+headR*1.15+9}" stroke="${col}" stroke-width="1.4"/><circle cx="${cx+s*headR*.8}" cy="${y0+headR*1.15+10}" r="1.8" fill="${col}"/>`).join("");
+      return `<path d="M${cx-nk},${nY} L${cx},${buY+6} L${cx+nk},${nY}" fill="none" stroke="${col}" stroke-width="1"/><circle cx="${cx}" cy="${buY+8}" r="2.5" fill="${col}" ${ST}/>`;
+    case "scarf":
+      if(/карманный/.test(n)) return `<path d="M${cx+bu*.45},${buY-3} l8,0 l-4,-5Z" fill="${col}" ${ST}/>`;
+      if(/платок/.test(n)) return `<path d="M${cx-nk-3},${nY-1} L${cx+nk+3},${nY-1} L${cx+4},${nY+H*.06}Z" fill="${col}" ${ST}/>`;
+      return `<rect x="${cx-nk-5}" y="${nY-4}" width="${nk*2+10}" height="9" rx="4" fill="${col}" ${ST}/><rect x="${cx-nk-2}" y="${nY+3}" width="9" height="${buY-nY+12}" rx="2" fill="${col}" ${ST}/>`;
+    case "hat":
+      const hy=y0+headR*.35;
+      if(/шляп/.test(n)) return `<ellipse cx="${cx}" cy="${hy+2}" rx="${headR*1.9}" ry="3.5" fill="${col}" ${ST}/><path d="M${cx-headR*.8},${hy+1} Q${cx},${hy-headR*1.2} ${cx+headR*.8},${hy+1}Z" fill="${col}" ${ST}/>`;
+      if(/берет/.test(n)) return `<ellipse cx="${cx+3}" cy="${hy-1}" rx="${headR*1.05}" ry="${headR*.45}" fill="${col}" ${ST}/>`;
+      if(/кепка/.test(n)) return `<path d="M${cx-headR*.85},${hy+2} Q${cx},${hy-headR*1.1} ${cx+headR*.85},${hy+2} L${cx+headR*1.6},${hy+4} L${cx+headR*.85},${hy+4}Z" fill="${col}" ${ST}/>`;
+      return `<path d="M${cx-headR*.88},${hy+5} Q${cx},${hy-headR*1.2} ${cx+headR*.88},${hy+5}Z" fill="${col}" ${ST}/>`;
+  }
+  return "";
+}
+function dressedSVG(s,o){
+  const g=geo(s), P=Object.fromEntries(o.parts.map(p=>[p.role,p]));
+  const tucked=P.top&&P.bottom&&(P.bottom.it.pref==="skirt"||/высок|палаццо|широк|mom|защип/i.test(P.bottom.it.name)||(s.g==="m"&&/рубашк/i.test(P.top.it.name)&&/брюки/i.test(P.bottom.it.name)));
+  let out=bodyG(g);
+  if(P.bottom) out+=bottomSVG(g,P.bottom.it,P.bottom.color.hex);
+  if(P.shoes) out+=shoesSVG(g,P.shoes.it,P.shoes.color.hex);
+  if(P.top) out+=topSVG(g,P.top.it,P.top.color.hex,tucked);
+  if(P.dress) out+=dressSVG(g,P.dress.it,P.dress.color.hex);
+  if(P.acc&&P.acc.it.pref==="belt") out+=accSVG(g,P.acc.it,P.acc.color.hex);
+  if(P.outer) out+=outerSVG(g,P.outer.it,P.outer.color.hex);
+  if(P.acc&&P.acc.it.pref!=="belt") out+=accSVG(g,P.acc.it,P.acc.color.hex);
+  return `<svg viewBox="10 ${g.y0-14} 180 ${400-g.y0+12}" role="img" aria-label="Примерка образа на фигуре">${out}</svg>`;
+}
+
+/* ---------- рендер ---------- */
+const OCC_NAME=Object.fromEntries(OCCS);
+const ROLE={top:"верх",bottom:"низ",dress:"платье",outer:"верхний слой",shoes:"обувь",acc:"аксессуар"};
+function bmiLabel(b){return b<18.5?"ниже нормы":b<25?"норма":b<30?"выше нормы":"значительно выше нормы"}
+const HC={petite:"невысокий",mid:"средний",tall:"высокий"};
+function valid(s){return ["age","height","weight","shoulders","bust","waist","hips"].every(k=>s[k]>0)}
+
+/* ---------- размеры и посадка ---------- */
+const INT_F={40:"XXS",42:"XS",44:"S",46:"M",48:"L",50:"XL",52:"XXL",54:"3XL",56:"4XL",58:"5XL",60:"6XL"};
+const INT_M={44:"XS",46:"S",48:"M",50:"L",52:"XL",54:"XXL",56:"3XL",58:"4XL",60:"5XL",62:"6XL"};
+const ru=(v,base,b0,lo,hi)=>Math.min(hi,Math.max(lo,Math.round((v-base)/4)*2+b0));
+const JEANS={
+ f:{Zara:[[32,"XXS",58,86],[34,"XS",62,90],[36,"S",66,94],[38,"M",70,98],[40,"L",76,104],[42,"XL",82,110],[44,"XXL",88,116]],
+    Mango:[[32,"",59,86],[34,"",63,90],[36,"",66,94],[38,"",70,98],[40,"",74,102],[42,"",78,106],[44,"",85,112],[46,"",92,118],[48,"",97,122],[50,"",102,126],[52,"",107,130],[54,"",112,134]]},
+ m:{Zara:[[36,"",72,91],[38,"",76,95],[40,"",80,99],[42,"",84,103],[44,"",88,107],[46,"",92,111],[48,"",96,115]],
+    Mango:[[36,"US 29",72,86],[38,"US 30",76,90],[40,"US 31",80,94],[42,"US 32",84,98],[44,"US 34",88,102],[46,"US 36",92,106],[48,"US 38",96,110]]}
+};
+function brandJeans(s){
+  return Object.entries(JEANS[s.g]).map(([brand,rows])=>{
+    const w=rows.find(r=>r[2]>=s.waist-1), h=rows.find(r=>r[3]>=s.hips-1);
+    const pick=(w&&h)?(rows.indexOf(w)>rows.indexOf(h)?w:h):null;
+    return {brand,rows,w,h,pick,max:rows[rows.length-1]};
+  });
+}
+const jl=r=>r?`${r[0]}${r[1]?` (${r[1]})`:""}`:"вне сетки";
+function sizes(s){
+  let top,bottom,outer,W=Math.round(s.waist/2.54),L,notes=[];
+  if(s.g==="f"){
+    top=ru(s.bust,84,42,40,60); bottom=Math.max(ru(s.hips,92,42,40,60),ru(s.waist,66,42,40,60));
+    outer=Math.min(60,top+(s.shoulders>=41?2:0));
+    L=s.height<158?28:s.height<168?30:s.height<176?32:34;
+  }else{
+    top=ru(s.bust,96,48,44,62); bottom=Math.max(ru(s.waist,84,48,44,62),ru(s.hips,100,48,44,62));
+    outer=Math.min(62,top+(s.shoulders>=50?2:0));
+    L=s.height<170?30:s.height<178?32:s.height<186?34:36;
+  }
+  const dress=Math.max(top,bottom);
+  if(Math.abs(top-bottom)>=4) notes.push(`Верх и низ отличаются на ${Math.abs(top-bottom)/2} размер(а). Выгоднее раздельные вещи; ${s.g==="f"?"платья и комбинезоны":"костюмы"} берите по большему размеру и подгоняйте у портного.`);
+  if(outer>top) notes.push("Пиджаки и пальто — на размер больше из-за ширины плеч, лишнее в талии ушивается.");
+  if(s.g==="m"&&s.waist>=s.bust*.96) notes.push("Брюки выбирайте по обхвату талии с запасом 2–3 см, рубашки — с удлинённой спинкой, чтобы не выбивались.");
+  notes.push("Сетки брендов отличаются. Сверяйте свои обхваты с таблицей размеров магазина, а не только букву.");
+  const intOf=r=>(s.g==="f"?INT_F:INT_M)[r]||"—";
+  const jeans=brandJeans(s);
+  const jeansTag=jeans.filter(j=>j.pick).map(j=>`${j.brand} ${j.pick[0]}`).join(" · ")||`W${W} L${L}`;
+  return {top,bottom,outer,dress,W,L,notes,intOf,jeans,jeansTag,eu:r=>s.g==="f"?r-6:r-2};
+}
+const FIT={
+ f:{
+  hourglass:[["Брюки и джинсы","Прямые и широкие с высокой посадкой, bootcut, тёмные скинни","Низкая посадка, мешковатые карго"],["Рубашки и топы","Приталенные, с запахом, заправленные","Прямые коробчатые, оверсайз без пояса"],["Жакеты и пальто","Приталенные или с поясом, длина до бедра","Прямые объёмные, двубортные «коробки»"],["Юбки и платья","Карандаш, футляр, с запахом; до колена или миди","Трапеция и прямые без линии талии"]],
+  pear:[["Брюки и джинсы","Bootcut, клёш, прямые тёмные с высокой посадкой","Светлые скинни, карго, карманы на бёдрах"],["Рубашки и топы","Прямые или слегка приталенные, «лодочка», детали на плечах; заправленные или до талии","Длина ровно по самой широкой части бёдер"],["Жакеты и пальто","Укороченные до талии или до середины бедра, с чётким плечом","Длиной по линию бёдер, с карманами внизу"],["Юбки и платья","А-силуэт, годе, миди","Светлый карандаш, объём на бёдрах"]],
+  invtri:[["Брюки и джинсы","Широкие, палаццо, wide leg, баррел, карго","Скинни и сигареты"],["Рубашки и топы","V-вырез, реглан, мягкие ткани, тёмный цвет","Подплечники, пышные рукава, «лодочка»"],["Жакеты и пальто","Мягкое плечо, удлинённые, однобортные","Укороченные с объёмными плечами"],["Юбки и платья","А-силуэт, плиссе, тюльпан, макси","Узкий карандаш"]],
+  rect:[["Брюки и джинсы","Прямые с высокой посадкой, mom, wide leg, со стрелками","Низкая посадка без акцента"],["Рубашки и топы","С поясом, баской, асимметрией, заправленные","Прямые длинные без структуры"],["Жакеты и пальто","С поясом, графичный оверсайз, укороченный твид","Прямые до бедра поверх прямого платья"],["Юбки и платья","Платье-рубашка с поясом, комбинация, плиссе, тюльпан","Мешковатый трикотаж"]],
+  apple:[["Брюки и джинсы","Прямые и bootcut, мягкая средняя или высокая посадка, без складок спереди","Скинни при объёмном верхе, низкая посадка"],["Рубашки и топы","Струящиеся, V-вырез, туники навыпуск до бедра","Облегающий трикотаж, заправка в тугой пояс"],["Жакеты и пальто","Удлинённые прямые, нараспашку, однобортные","Укороченные, двубортные, с поясом"],["Юбки и платья","Ампир, с запахом, трапеция; чуть ниже колена","Облегающий футляр, пояс по талии"]]
+ },
+ m:{
+  trap:[["Брюки и джинсы","Прямые, slim-tapered, чиносы","Сильно расклешённые и мешковатые"],["Рубашки и верх","Slim и regular fit","Оверсайз на 2 размера"],["Пиджаки и куртки","Однобортные приталенные, неконструированные","Широкие коробчатые"]],
+  invtri:[["Брюки и джинсы","Прямые, relaxed, с защипами, карго","Скинни, slim с узким низом"],["Рубашки и верх","Regular fit, эластичные ткани по плечам","Slim, тесный в плечах"],["Пиджаки и куртки","Мягкое плечо, длина ниже ягодиц","Подплечники, укороченные"]],
+  rect:[["Брюки и джинсы","Slim-tapered, прямые чиносы","Широкие мешковатые"],["Рубашки и верх","Приталенные, с нагрудными карманами, слои","Прямые длинные бесформенные"],["Пиджаки и куртки","Структурное плечо, бомберы до талии","Длинные пиджаки без формы"]],
+  tri:[["Брюки и джинсы","Прямые тёмные средней ширины","Скинни, светлые широкие, карго"],["Рубашки и верх","Regular fit, фактура и светлые тона, нагрудные карманы","Облегающий slim"],["Пиджаки и куртки","Чёткое плечо, однобортный, до бёдер","Покатое плечо, укороченные куртки"]],
+  oval:[["Брюки и джинсы","Прямые, средняя посадка, с защипами, тёмные","Скинни, низкая посадка под живот"],["Рубашки и верх","Regular fit навыпуск ниже пояса, V-вырез, плотные ткани","Облегающие поло, заправка под тугой ремень"],["Пиджаки и куртки","Однобортный на 1–2 пуговицы, прикрывает ягодицы","Двубортные, укороченные бомберы"]]
+ }
+};
+function sizeTag(it,sz){
+  if(it.cat==="shoes"||it.cat==="acc") return "";
+  if(it.pref==="jeans") return sz.jeansTag;
+  const r=it.cat==="top"?sz.top:it.cat==="bottom"?sz.bottom:it.cat==="dress"?sz.dress:sz.outer;
+  return `${sz.intOf(r)} · RU ${r}`;
+}
+
+/* ---------- рендер ---------- */
+let CUR={outfits:[],shape:"",palette:null};
+let perOcc=6;
+function render(){
+  const R=$("results"); hidePop();
+  if(!valid(S)){R.innerHTML=`<div class="panel"><p class="warn">Заполните возраст, рост, вес, ширину плеч и три обхвата — модель фигуры строится по ним.</p></div>`;return;}
+  if(!S.ov) S.ov={};
+  const a=analyze(S), sh=SHAPES[S.g][a.shape], sz=sizes(S);
+  const {outfits,palette:p}=buildOutfits(S,a.shape);
+  CUR={outfits,shape:a.shape,palette:p,sz};
+  const likedStyles=STYLES[S.g].filter(x=>S.styles.includes(x[0])).map(x=>x[1]);
+  const no=PREFS[S.g].filter(x=>S.prefs[x[0]]===-1).map(x=>x[1]);
+  const shown=outfits.filter(o=>occView==="all"||o.occ===occView);
+  const row=(label,r,extra)=>`<tr><th scope="row">${label}</th><td>${extra||sz.intOf(r)}</td><td>${extra?"—":r}</td>${S.g==="f"?`<td>${extra?"—":sz.eu(r)}</td>`:""}</tr>`;
+  R.innerHTML=`
+  <section class="panel">
+    <div class="model">
+      ${figureSVG(S,a.shape)}
+      <div style="min-width:0">
+        <div class="eyebrow">Модель фигуры${S.name?` · ${esc(S.name)}`:""}</div>
+        <div class="shape-name">${sh.name}</div>
+        <p class="goal">${sh.goal}</p>
+        <div class="metrics">
+          <div class="metric"><b>${a.bmi.toFixed(1)}</b><small>ИМТ · ${bmiLabel(a.bmi)}</small></div>
+          <div class="metric"><b>${a.whr.toFixed(2)}</b><small>талия / бёдра</small></div>
+          <div class="metric"><b>${sz.intOf(sz.top)} / ${sz.intOf(sz.bottom)}</b><small>размер верх / низ</small></div>
+          <div class="metric"><b>${S.height}</b><small>рост: ${HC[a.hcat]}</small></div>
+        </div>
+        <div class="tags">${likedStyles.map(x=>`<span class="tag">${x}</span>`).join("")}${no.map(x=>`<span class="tag" style="background:var(--bg);text-decoration:line-through">${x}</span>`).join("")}</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="panel">
+    <h2>Размеры и посадка</h2>
+    <div class="sizes">
+      <div class="tbl-wrap"><table class="sz">
+        <thead><tr><th></th><th>INT</th><th>RU</th>${S.g==="f"?"<th>EU</th>":""}</tr></thead>
+        <tbody>
+          ${row(S.g==="f"?"Блузы, топы, трикотаж":"Рубашки, футболки, трикотаж",sz.top)}
+          ${row(S.g==="f"?"Брюки и юбки":"Брюки",sz.bottom)}
+          ${row(S.g==="f"?"Платья, комбинезоны":"Костюм",sz.dress)}
+          ${row("Пиджаки и пальто",sz.outer)}
+          ${row("Джинсы",0,`W${sz.W} / L${sz.L}`)}
+        </tbody></table></div>
+      <div class="notes" style="margin-top:0">${sz.notes.map(n=>`<div class="note">${n}</div>`).join("")}</div>
+    </div>
+    <h3 class="sub">Джинсы в Zara и Mango</h3>
+    <div class="tbl-wrap"><table class="sz">
+      <thead><tr><th>Бренд</th><th>Ваш размер</th><th>По талии ${S.waist}</th><th>По бёдрам ${S.hips}</th></tr></thead>
+      <tbody>${sz.jeans.map(j=>`<tr><th scope="row">${j.brand}</th><td><b>${j.pick?jl(j.pick):"больше сетки"}</b></td><td>${jl(j.w)}</td><td>${jl(j.h)}</td></tr>`).join("")}</tbody>
+    </table></div>
+    <div class="notes">${(()=>{const n=[];
+      const diff=sz.jeans.filter(j=>j.pick&&j.w!==j.h);
+      if(diff.length) n.push(`Талия и бёдра попадают в разные размеры, поэтому выбран размер по более широкому месту. Если в поясе будет свободно, подойдёт ремень или ушивка; модели со стрейчем можно взять на размер меньше.`);
+      const out=sz.jeans.filter(j=>!j.pick);
+      if(out.length) n.push(`${out.map(j=>j.brand).join(" и ")}: обхваты больше самого крупного размера сетки (${out.map(j=>j.brand+" "+jl(j.max)).join(", ")}). Ищите линейки plus size или бренды с расширенной сеткой.`);
+      n.push(`Длина: при росте ${S.height} см ориентируйтесь на L${sz.L}; у укороченных моделей и mom-джинсов длина рассчитана на щиколотку.`);
+      n.push("Таблицы по данным размерных сеток брендов. Перед покупкой сверьтесь с таблицей на карточке конкретной модели: посадка у skinny и wide leg может отличаться.");
+      return n.map(x=>`<div class="note">${x}</div>`).join("");})()}</div>
+    <h3 class="sub">Какая модель сядет лучше</h3>
+    <div class="fit">
+      <div class="fit-h">Вещь</div><div class="fit-h">Лучший крой</div><div class="fit-h">Не подойдёт</div>
+      ${FIT[S.g][a.shape].map(([c,b,x])=>`<div class="fit-c">${c}</div><div class="fit-b">${b}</div><div class="fit-x">${x}</div>`).join("")}
+    </div>
+  </section>
+
+  <section class="panel">
+    <h2>Стратегия гардероба</h2>
+    <div class="cols">
+      <div class="do"><h3>Работает</h3><ul>${sh.do.map(x=>`<li>${x}</li>`).join("")}</ul></div>
+      <div class="avoid"><h3>Избегать</h3><ul>${sh.avoid.map(x=>`<li>${x}</li>`).join("")}</ul></div>
+    </div>
+    ${a.notes.length?`<div class="notes">${a.notes.map(n=>`<div class="note">${n}</div>`).join("")}</div>`:""}
+    <div class="palette-group"><div class="eyebrow">Палитра: база</div>
+      <div class="palette">${p.neutrals.slice(0,6).map(c=>`<div class="sw"><i style="background:${c.hex}"></i>${c.name}</div>`).join("")}</div></div>
+    <div class="palette-group"><div class="eyebrow">Палитра: акценты</div>
+      <div class="palette">${p.accents.map(c=>`<div class="sw"><i style="background:${c.hex}"></i>${c.name}</div>`).join("")}</div></div>
+  </section>
+
+  <section class="panel">
+    <div class="head-row">
+      <h2>Готовые образы</h2>
+      <div class="occ-filter" role="group" aria-label="Фильтр по случаю">
+        ${[["all","Все"],...OCCS.filter(o=>S.occ.includes(o[0]))].map(o=>`<button type="button" class="chip ${occView===o[0]?"on":""}" data-occview="${o[0]}">${o[1]} <span class="cnt">${o[0]==="all"?outfits.length:outfits.filter(x=>x.occ===o[0]).length}</span></button>`).join("")}
+      </div>
+    </div>
+    <p class="hint" style="margin-top:8px">Наведите на образ, чтобы увидеть его на фигуре. Нет нужной вещи или цвета — нажмите «другая», на кружок цвета или «нет в гардеробе».</p>
+    ${shown.length?`<div class="outfits">${shown.map(o=>`
+      <article class="outfit" data-key="${o.key}" tabindex="0">
+        <div class="stack">${o.parts.map(x=>`<i style="background:${x.color.hex}" title="${x.color.name}"></i>`).join("")}</div>
+        <div class="o-head"><div><div class="occ">${OCC_NAME[o.occ]}</div><h4>${titleFor(o)}</h4></div>
+          <button type="button" class="try" data-try="${o.key}">Примерка</button></div>
+        <ul class="items">${o.parts.map(x=>`<li>
+          <button type="button" class="dot dotbtn" style="background:${x.color.hex}" data-act="color" data-key="${o.key}" data-role="${x.role}" aria-label="Другой цвет: сейчас ${x.color.name}" title="Другой цвет"></button>
+          <span>${x.it.name}${sizeTag(x.it,sz)?` <span class="size">${sizeTag(x.it,sz)}</span>`:""}
+            <small>${x.it.pref==="jumpsuit"?"комбинезон":ROLE[x.role]} · ${x.color.name}${x.it.fabric?` · ${x.it.fabric}`:""}${x.fits?` · <span class="fit-ok">по фигуре</span>`:""}${S.prefs[x.it.pref]===1?" · ♥ любимое":""}</small>
+            <span class="acts"><button type="button" data-act="swap" data-key="${o.key}" data-role="${x.role}">другая</button><button type="button" data-act="miss" data-key="${o.key}" data-role="${x.role}">нет в гардеробе</button></span>
+          </span></li>`).join("")}</ul>
+        ${S.ov[o.key]?`<button type="button" class="reset" data-act="reset" data-key="${o.key}">Вернуть исходный образ</button>`:""}
+      </article>`).join("")}</div>
+      <div class="more-row">${perOcc<24?`<button type="button" class="btn ghost" id="moreBtn">Показать ещё образы</button>`:""}<span class="hint">Показано ${shown.length}. Повторы вещей появляются, когда подходящие варианты в каталоге заканчиваются.</span></div>`:`<p class="empty">Под выбранные ограничения образов не нашлось. Снимите пару пометок «не носит» или верните вещи из списка «нет в гардеробе».</p>`}
+  </section>`;
+  R.querySelectorAll("[data-occview]").forEach(b=>b.onclick=()=>{occView=b.dataset.occview;render();});
+  const mb=$("moreBtn"); if(mb) mb.onclick=()=>{const y=scrollY;perOcc+=6;render();scrollTo(0,y);};
+  R.querySelectorAll(".outfit").forEach(card=>{
+    const o=outfits.find(x=>x.key===card.dataset.key);
+    card.addEventListener("mouseenter",()=>{if(matchMedia("(hover:hover)").matches) showPop(o,card,false);});
+    card.addEventListener("mouseleave",()=>{if(!popPinned) hidePop();});
+    card.addEventListener("focus",()=>showPop(o,card,false));
+    card.addEventListener("blur",()=>{if(!popPinned) hidePop();});
+  });
+  R.querySelectorAll("[data-try]").forEach(b=>b.onclick=e=>{e.stopPropagation();const o=outfits.find(x=>x.key===b.dataset.try);showPop(o,b.closest(".outfit"),true);});
+  R.querySelectorAll("[data-act]").forEach(b=>b.onclick=e=>{e.stopPropagation();act(b.dataset.act,b.dataset.key,b.dataset.role);});
+}
+function act(kind,key,role){
+  const o=CUR.outfits.find(x=>x.key===key); if(!o) return;
+  const ov=S.ov[key]||(S.ov[key]={});
+  const part=o.parts.find(p=>p.role===role);
+  if(kind==="reset"){delete S.ov[key];render();return;}
+  if(kind==="color"){
+    const list=[...CUR.palette.neutrals,...CUR.palette.accents].filter((c,i,a)=>a.findIndex(x=>x.name===c.name)===i);
+    const i=list.findIndex(c=>c.name===part.color.name);
+    ov[role]={...ov[role],color:list[(i+1)%list.length].name};
+  }
+  if(kind==="swap"||kind==="miss"){
+    if(kind==="miss"){S.missing=[...(S.missing||[]),part.it.g+"|"+part.it.name];fillMissing();toast(`«${part.it.name}» убрано из подбора`);}
+    const cands=ITEMS.filter(it=>it.cat===part.it.cat).map(it=>({it,r:itemScore(it,S,CUR.shape,o.occ)})).filter(x=>x.r).sort((a,b)=>b.r.sc-a.r.sc||a.it.id-b.it.id);
+    const i=cands.findIndex(x=>x.it.id===part.it.id);
+    const next=cands[(i+1)%cands.length];
+    if(!next||(next.it.id===part.it.id)){ if(kind==="swap"){toast("Других подходящих вариантов нет");return;} if(ov[role]) delete ov[role].id; }
+    else ov[role]={...ov[role],id:next.it.id};
+  }
+  render();
+}
+function fillMissing(){
+  const m=S.missing||[]; $("missWrap").hidden=!m.length;
+  $("missing").innerHTML=m.map((k,i)=>`<button type="button" class="chip" data-i="${i}" aria-label="Вернуть ${esc(k.split("|")[1])}">${esc(k.split("|")[1])} <span aria-hidden="true">×</span></button>`).join("");
+  $("missing").querySelectorAll("button").forEach(b=>b.onclick=()=>{S.missing.splice(+b.dataset.i,1);fillMissing();render();});
+}
+
+/* ---------- всплывающая примерка ---------- */
+let popPinned=false;
+function showPop(o,card,pin){
+  if(!o) return;
+  const pop=$("pop"); popPinned=pin;
+  pop.innerHTML=`<div class="pop-h"><span class="occ">${OCC_NAME[o.occ]}</span>${pin?`<button type="button" class="pop-x" aria-label="Закрыть">×</button>`:""}</div>
+    ${dressedSVG(S,o)}
+    <div class="pop-t">${titleFor(o)}</div>
+    <div class="pop-l">${o.parts.map(x=>`<span><i style="background:${x.color.hex}"></i>${x.it.name}</span>`).join("")}</div>`;
+  pop.hidden=false; pop.classList.toggle("pinned",pin);
+  const x=pop.querySelector(".pop-x"); if(x) x.onclick=hidePop;
+  const r=card.getBoundingClientRect(), pw=pop.offsetWidth, ph=pop.offsetHeight, vw=innerWidth, vh=innerHeight;
+  let left, top;
+  if(vw<700){left=(vw-pw)/2;top=Math.max(12,(vh-ph)/2);}
+  else{
+    left=r.right+12; if(left+pw>vw-12) left=r.left-pw-12; if(left<12) left=Math.min(vw-pw-12,Math.max(12,r.left));
+    top=Math.min(vh-ph-12,Math.max(12,r.top));
+  }
+  pop.style.left=left+"px"; pop.style.top=top+"px";
+}
+function hidePop(){const p=$("pop"); if(p){p.hidden=true;popPinned=false;}}
+document.addEventListener("click",e=>{if(popPinned&&!e.target.closest("#pop")&&!e.target.closest("[data-try]")) hidePop();});
+document.addEventListener("keydown",e=>{if(e.key==="Escape") hidePop();});
+addEventListener("scroll",()=>{if(!popPinned) hidePop();},{passive:true});
+
+function titleFor(o){
+  const main=o.dress?o.dress.it.name:o.bottom.it.name;
+  const c=o.dress?o.parts.find(x=>x.role==="dress").color:o.parts.find(x=>x.role==="top").color;
+  return `${c.name} + ${main.toLowerCase()}`;
+}
+function esc(t){return String(t).replace(/[&<>"]/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[m]))}
+
+/* ---------- форма ---------- */
+function chipsMulti(el,list,key){
+  el.innerHTML=list.map(([k,l])=>`<button type="button" class="chip ${S[key].includes(k)?"on":""}" data-k="${k}">${l}</button>`).join("");
+  el.querySelectorAll("button").forEach(b=>b.onclick=()=>{const k=b.dataset.k;S[key]=S[key].includes(k)?S[key].filter(x=>x!==k):[...S[key],k];b.classList.toggle("on");render();});
+}
+function chipsTri(el,list,obj,withDot){
+  el.innerHTML=list.map(([k,l,hex])=>`<button type="button" class="chip" data-k="${k}" data-s="${obj[k]||0}">${withDot?`<span class="dot" style="background:${hex}"></span>`:""}${l}</button>`).join("");
+  el.querySelectorAll("button").forEach(b=>b.onclick=()=>{const k=b.dataset.k;const n={0:1,1:-1,"-1":0}[obj[k]||0];if(n)obj[k]=n;else delete obj[k];b.dataset.s=n;render();});
+}
+function fillForm(){
+  for(const k of ["name","age","height","weight","shoulders","bust","waist","hips"]) $(k).value=S[k]??"";
+  $("gF").setAttribute("aria-pressed",S.g==="f");$("gM").setAttribute("aria-pressed",S.g==="m");
+  $("bustLbl").textContent=S.g==="f"?"Грудь":"Грудная клетка";
+  S.styles=S.styles.filter(x=>STYLES[S.g].some(s=>s[0]===x));
+  chipsMulti($("styles"),STYLES[S.g],"styles");
+  chipsMulti($("occs"),OCCS,"occ");
+  if(!S.missing) S.missing=[]; if(!S.ov) S.ov={};
+  fillMissing();
+  if(!S.season) S.season="all";
+  $("seasons").innerHTML=SEASONS.map(([k,l])=>`<button type="button" class="chip ${S.season===k?"on":""}" data-k="${k}">${l}</button>`).join("");
+  $("seasons").querySelectorAll("button").forEach(b=>b.onclick=()=>{S.season=b.dataset.k;$("seasons").querySelectorAll("button").forEach(x=>x.classList.toggle("on",x===b));render();});
+  chipsTri($("prefs"),PREFS[S.g],S.prefs,false);
+  chipsTri($("colors"),COLORS.map(c=>[c[0],c[0],c[1]]),S.colors,true);
+}
+["age","height","weight","shoulders","bust","waist","hips"].forEach(k=>$(k).addEventListener("input",e=>{S[k]=parseFloat(e.target.value)||0;render();}));
+$("name").addEventListener("input",e=>{S.name=e.target.value;render();});
+[$("gF"),$("gM")].forEach(b=>b.onclick=()=>{
+  if(S.g===b.dataset.g)return; S.g=b.dataset.g;
+  if(S.g==="m"&&S.shoulders<42){S.shoulders=46;S.bust=100;S.waist=86;S.hips=98;S.height=178;S.weight=78;}
+  if(S.g==="f"&&S.shoulders>42){S.shoulders=37;S.bust=92;S.waist=72;S.hips=100;S.height=166;S.weight=62;}
+  for(const k in S.prefs) if(!PREFS[S.g].some(p=>p[0]===k)) delete S.prefs[k];
+  fillForm();render();
+});
+function toast(t){const d=document.createElement("div");d.className="toast";d.textContent=t;document.body.appendChild(d);setTimeout(()=>d.remove(),1800);}
+function refreshProfiles(){
+  const ps=store.get();
+  $("profileSel").innerHTML=`<option value="">Профили (${Object.keys(ps).length})…</option>`+Object.keys(ps).map(n=>`<option value="${esc(n)}">${esc(n)}</option>`).join("");
+}
+$("form").addEventListener("submit",e=>{
+  e.preventDefault();
+  const n=(S.name||"").trim(); if(!n){$("name").focus();toast("Введите имя профиля");return;}
+  const ps=store.get();ps[n]=structuredClone(S);store.set(ps);refreshProfiles();$("profileSel").value=n;toast("Профиль сохранён");
+});
+$("profileSel").onchange=e=>{const ps=store.get();const p=ps[e.target.value];if(p){S=structuredClone(p);if(!S.ov)S.ov={};if(!S.missing)S.missing=[];occView="all";fillForm();render();}};
+$("delProfile").onclick=()=>{const n=$("profileSel").value;if(!n){toast("Выберите профиль");return;}const ps=store.get();delete ps[n];store.set(ps);refreshProfiles();toast("Профиль удалён");};
+
+// линейка
+(()=>{const t=$("tape");let h="";for(let i=0;i<=60;i++)h+=`<span style="left:${i*50+3}px">${i*5}</span>`;t.innerHTML=h;})();
+/* ---------- отзывы ---------- */
+const cuse=n=>(window.claude&&window.claude.use)?window.claude.use(n):Promise.resolve(null);
+const FBQ={r1:"Тип фигуры",r2:"Образы",r3:"Размеры",r4:"Удобство"};
+const fb={r1:0,r2:0,r3:0,r4:0};
+document.querySelectorAll(".fb-q").forEach(q=>{
+  const k=q.dataset.q, box=q.querySelector(".scale");
+  box.innerHTML=[1,2,3,4,5].map(n=>`<button type="button" data-n="${n}" aria-pressed="false" aria-label="${FBQ[k]}: ${n} из 5">${n}</button>`).join("");
+  box.querySelectorAll("button").forEach(b=>b.onclick=()=>{fb[k]=+b.dataset.n;box.querySelectorAll("button").forEach(x=>x.setAttribute("aria-pressed",x===b));});
+});
+function fbEntry(){
+  const e={at:Date.now(),name:$("fbName").value.trim(),r1:fb.r1,r2:fb.r2,r3:fb.r3,r4:fb.r4,liked:$("fbLiked").value.trim(),improve:$("fbImprove").value.trim()};
+  if($("fbAttach").checked&&valid(S)){
+    const a=analyze(S);
+    e.profile={g:S.g,shape:SHAPES[S.g][a.shape].name,age:S.age,height:S.height,weight:S.weight,shoulders:S.shoulders,bust:S.bust,waist:S.waist,hips:S.hips,season:S.season,styles:S.styles};
+  }
+  return e;
+}
+function fbAsText(e){
+  return [`Отзыв о Tailor Map${e.name?" — "+e.name:""}`,
+    ...Object.keys(FBQ).map(k=>`${FBQ[k]}: ${e[k]||"—"}/5`),
+    e.liked?`Понравилось: ${e.liked}`:"", e.improve?`Улучшить: ${e.improve}`:"",
+    e.profile?`Профиль: ${e.profile.g==="f"?"ж":"м"}, ${e.profile.age} лет, ${e.profile.height} см, ${e.profile.weight} кг; плечи ${e.profile.shoulders}, грудь ${e.profile.bust}, талия ${e.profile.waist}, бёдра ${e.profile.hips}; тип: ${e.profile.shape}`:""].filter(Boolean).join("\n");
+}
+$("fbForm").addEventListener("submit",async ev=>{
+  ev.preventDefault();
+  const e=fbEntry();
+  if(!e.r1&&!e.r2&&!e.r3&&!e.r4&&!e.liked&&!e.improve){$("fbStatus").textContent="Поставьте хотя бы одну оценку или напишите пару слов.";return;}
+  $("fbStatus").textContent="Отправляем…"; $("fbFallback").hidden=true;
+  let ok=false;
+  try{
+    const db=await cuse("db"), user=await cuse("user");
+    const uid=user&&await user.id();
+    if(db&&uid){
+      const ref=db.doc("feedback/"+uid); const snap=await ref.get();
+      const prev=(snap.exists&&Array.isArray(snap.data().entries))?snap.data().entries:[];
+      await ref.set({entries:[...prev,e].slice(-20),updated:Date.now()});
+      ok=true;
+    }
+  }catch(err){ok=false;}
+  if(!ok&&!window.claude){
+    try{const r=await fetch("/api/feedback",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(e)});ok=r.ok;}catch(err){ok=false;}
+  }
+  if(ok){$("fbStatus").textContent="Спасибо! Отзыв сохранён.";["fbLiked","fbImprove"].forEach(id=>$(id).value="");loadFeedback();}
+  else{$("fbStatus").textContent="";$("fbText").value=fbAsText(e);$("fbFallback").hidden=false;}
+});
+$("fbCopy").onclick=()=>{const t=$("fbText");navigator.clipboard?.writeText(t.value).then(()=>toast("Скопировано"),()=>{t.focus();t.select();});};
+async function loadFeedback(){
+  try{
+    const user=await cuse("user"); if(!user||!(await user.isOwner())) return;
+    const db=await cuse("db"); if(!db) return;
+    $("fbOwner").hidden=false;
+    const q=await db.collection("feedback").get();
+    const all=q.docs.flatMap(d=>((d.data()||{}).entries||[]).map(e=>({...e}))).sort((a,b)=>b.at-a.at);
+    $("fbCount").textContent=all.length;
+    $("fbList").innerHTML=all.length?all.map(e=>`<div class="fb-item"><b>${esc(e.name||"Без имени")}</b><span class="scores">${Object.keys(FBQ).map(k=>`${FBQ[k]} ${e[k]||"—"}`).join(" · ")}</span>${e.liked?`<p><b>Понравилось:</b> ${esc(e.liked)}</p>`:""}${e.improve?`<p><b>Улучшить:</b> ${esc(e.improve)}</p>`:""}${e.profile?`<span class="hint">${e.profile.g==="f"?"Ж":"М"}, ${e.profile.age} лет, ${e.profile.height} см · ${esc(e.profile.shape)}</span>`:""}<span class="hint">${new Date(e.at).toLocaleString("ru-RU")}</span></div>`).join(""):`<p class="empty">Отзывов пока нет. Здесь появится всё, что отправят тестировщики.</p>`;
+  }catch(err){}
+}
+$("fbRefresh").onclick=loadFeedback;
+loadFeedback();
+
+$("catCount").textContent=ITEMS.length;
+fillForm();refreshProfiles();render();
+</script>
+
+</body>
+</html>
